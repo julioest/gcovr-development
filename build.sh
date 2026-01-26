@@ -11,13 +11,13 @@ GCOVRFILTER=".*/$REPONAME/.*"
 cd "$REPONAME"
 BOOST_CI_SRC_FOLDER=$(pwd)
 
-rm -rf "gcovr/*"
 cd ../boost-root
 
 # To copy files to the main Windows disk:
-# mkdir -p /mnt/c/output
+mkdir -p /mnt/c/output
 
-outputlocation="$BOOST_CI_SRC_FOLDER/gcovr/index.html"
-outputlocation="/mnt/c/output/index.html"
+outputlocation="$BOOST_CI_SRC_FOLDER/gcovr"
+outputlocation="/mnt/c/output"
+rm -rf "$outputlocation/*"
 
-gcovr --merge-mode-functions separate -p --html-nested --html-template-dir=..\templates --exclude-unreachable-branches --exclude-throw-branches --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --html --output "$outputlocation"
+gcovr --merge-mode-functions separate -p --html-nested --html-template-dir=..\templates --exclude-unreachable-branches --exclude-throw-branches --exclude '.*/test/.*' --exclude '.*/extra/.*' --filter "$GCOVRFILTER" --html --output "$outputlocation/index.html"
