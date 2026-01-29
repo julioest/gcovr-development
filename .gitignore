@@ -1,7 +1,13 @@
 # Generated coverage reports
-# json/gcovr/
-# json/gcovr-lcov/
-# json/gcovr-output/
+json/gcovr/
+json/gcovr-lcov/
+json/gcovr-output/
+
+# Build/test artifacts (from b2/Docker)
+boost-root/bin.v2/
+
+# Python cache
+__pycache__/
 
 # Claude Code
 .claude/
