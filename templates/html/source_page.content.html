@@ -11,7 +11,7 @@
         <span class="btn-count">{{lines.exec - partial_count}}</span> covered
       </button>
       <button type="button" class="btn btn-sm button_toggle_uncoveredLine show_uncoveredLine" value="uncoveredLine" title="Toggle uncovered lines">
-        <span class="btn-count">{{lines.uncovered}}</span> uncovered
+        <span class="btn-count">{{lines.total - lines.exec}}</span> uncovered
       </button>
       {% if partial_count > 0 %}
       <button type="button" class="btn btn-sm button_toggle_partialCoveredLine show_partialCoveredLine" value="partialCoveredLine" title="Toggle partial covered lines">
