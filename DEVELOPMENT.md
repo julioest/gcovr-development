@@ -7,19 +7,33 @@ This guide explains how to set up and use the local development environment for 
 - Python 3.8+
 - Docker (optional, for generating coverage data)
 
+## Repository Structure
+
+```
+gcovr-development/
+├── templates/html/       # Custom gcovr HTML templates
+├── scripts/              # Build utilities
+├── gcovr-output/         # Generated HTML reports (git-ignored, created by build)
+├── coverage.json         # Coverage data (generate via Docker or download)
+├── build.sh              # Generate HTML from coverage data
+├── setup-boost.sh        # Clone Boost source (creates boost-root/)
+├── setup-local-venv.sh   # Set up Python environment
+└── docker-build.sh       # Generate coverage data via Docker
+```
+
 ## Quick Start
 
 ### Option 1: Local Python venv (for template development)
 
-If you already have `coverage.json` or `.info` files:
+If you already have `coverage.json`:
 
 ```bash
 ./setup-local-venv.sh
 source .venv/bin/activate
-./build.sh
+./build.sh --quick
 ```
 
-This installs gcovr 8.4 in a local venv and generates the HTML report in `json/gcovr/`.
+This installs gcovr 8.4 in a local venv and generates the HTML report in `gcovr-output/`.
 
 ### Option 2: Docker (for generating coverage data)
 
@@ -35,24 +49,28 @@ This will:
 3. Run tests
 4. Generate `coverage.json` in `output/`
 
-After completion, copy the coverage data and run the report generator:
+After completion:
 
 ```bash
-cp output/coverage.json json/
+cp output/coverage.json .
 ./build.sh
 ```
 
-### Interactive debugging
+### Cloning Boost source
+
+If you need the Boost source code (for CI builds or direct gcovr runs):
 
 ```bash
-./docker-build.sh shell
+./setup-boost.sh json    # Clone only Boost.JSON and dependencies
+# or
+./setup-boost.sh         # Clone all of Boost (slower)
 ```
 
 ## Workflow
 
 1. **Edit templates** in `templates/html/`
 2. **Run `./build.sh --quick`** to regenerate with sample data (faster)
-3. **View results** in `json/gcovr/index.html`
+3. **View results** in `gcovr-output/index.html`
 4. **Run `./build.sh`** for a full build when ready
 
 ## Files
@@ -60,6 +78,7 @@ cp output/coverage.json json/
 | File | Purpose |
 |------|---------|
 | `setup-local-venv.sh` | Creates Python venv with gcovr |
+| `setup-boost.sh` | Clones Boost superproject |
 | `docker-build.sh` | Builds coverage data via Docker |
 | `build.sh` | Generates HTML report (`--quick` for faster sample builds) |
 | `templates/html/` | Custom gcovr HTML templates |
@@ -68,4 +87,3 @@ cp output/coverage.json json/
 ## Coverage Data Formats
 
 - **`coverage.json`** (preferred): gcovr JSON tracefile with full function/branch data
-- **`*.info`** (fallback): LCOV format, converted to Cobertura XML (loses some data)

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This script will "rebuild" html files based on the templates.
+# This script generates gcovr HTML reports from coverage data.
 #
 # Usage:
-#   ./build.sh          # Full build (slow)
+#   ./build.sh          # Full build
 #   ./build.sh --quick  # Quick build with sample data for template testing
 
 set -xe
@@ -21,21 +21,16 @@ if [[ -f "$SCRIPT_DIR/.venv/bin/activate" ]]; then
     source "$SCRIPT_DIR/.venv/bin/activate"
 fi
 
-export REPONAME="json"
-export ORGANIZATION="boostorg"
-GCOVRFILTER=".*/$REPONAME/.*"
+# Output goes to top-level gcovr-output/
+OUTPUT_DIR="$SCRIPT_DIR/gcovr-output"
+rm -rf "$OUTPUT_DIR" || true
+mkdir -p "$OUTPUT_DIR"
 
-cd "$SCRIPT_DIR/$REPONAME"
-BOOST_CI_SRC_FOLDER=$(pwd)
+# Coverage data location
+COVERAGE_FILE="$SCRIPT_DIR/coverage.json"
 
-outputlocation="$BOOST_CI_SRC_FOLDER/gcovr"
-rm -rf $outputlocation || true
-mkdir -p $outputlocation
-
-# Determine which coverage file to use
-COVERAGE_FILE="$BOOST_CI_SRC_FOLDER/coverage.json"
 if [[ "$USE_QUICK" == true ]]; then
-    SAMPLE_FILE="$BOOST_CI_SRC_FOLDER/coverage_sample.json"
+    SAMPLE_FILE="$SCRIPT_DIR/coverage_sample.json"
 
     # Create sample file if it doesn't exist
     if [[ ! -f "$SAMPLE_FILE" && -f "$COVERAGE_FILE" ]]; then
@@ -63,59 +58,27 @@ print(f'Created sample with {len(small)} small files')
 fi
 
 if [[ -f "$COVERAGE_FILE" ]]; then
-    # Local/macOS: Use gcovr JSON tracefile (preserves function/branch data)
-    # The JSON uses relative paths from the boost-root directory,
-    # so we set --root to point to boost-root.
-
+    # Use gcovr JSON tracefile (preserves function/branch data)
     "$SCRIPT_DIR/scripts/gcovr_wrapper.py" \
         --json-add-tracefile "$COVERAGE_FILE" \
         --root "$SCRIPT_DIR/boost-root" \
         --merge-lines \
         --html-nested \
         --html-template-dir "$SCRIPT_DIR/templates/html" \
-        --output "$outputlocation/index.html"
+        --output "$OUTPUT_DIR/index.html"
 
     # Generate tree.json for sidebar navigation
-    python3 "$SCRIPT_DIR/scripts/build_tree.py" "$outputlocation"
+    python3 "$SCRIPT_DIR/scripts/build_tree.py" "$OUTPUT_DIR"
 
-elif [[ -f "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" ]]; then
-    # Fallback: Use LCOV -> Cobertura conversion (loses function/branch data)
-    echo "WARNING: Using LCOV fallback - function/branch data may be missing"
-    echo "Run docker-build.sh to generate coverage.json with full data"
-
-    ORIGINAL_PATH=$(grep -m1 "^SF:" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" | sed 's|^SF:||' | sed 's|/boost-root/.*||')
-    TEMP_COVERAGE="/tmp/coverage_local.info"
-    TEMP_XML="/tmp/coverage.xml"
-
-    sed "s|$ORIGINAL_PATH|$SCRIPT_DIR|g" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" > "$TEMP_COVERAGE"
-    lcov_cobertura "$TEMP_COVERAGE" -o "$TEMP_XML"
-    sed -i.bak "s|filename=\"\.\./boost-root/|filename=\"$SCRIPT_DIR/boost-root/|g" "$TEMP_XML"
-
-    "$SCRIPT_DIR/scripts/gcovr_wrapper.py" \
-        --cobertura-add-tracefile "$TEMP_XML" \
-        --root "$SCRIPT_DIR" \
-        --merge-lines \
-        --html-nested \
-        --html-template-dir "$SCRIPT_DIR/templates/html" \
-        --output "$outputlocation/index.html"
-
-    # Generate tree.json for sidebar navigation
-    python3 "$SCRIPT_DIR/scripts/build_tree.py" "$outputlocation"
 else
-    # CI/Linux: gcovr reads coverage data directly
-    cd ../boost-root
-    gcovr --merge-mode-functions separate -p \
-        --merge-lines \
-        --html-nested \
-        --html-template-dir=../templates/html \
-        --exclude-unreachable-branches \
-        --exclude-throw-branches \
-        --exclude '.*/test/.*' \
-        --exclude '.*/extra/.*' \
-        --filter "$GCOVRFILTER" \
-        --html \
-        --output "$outputlocation/index.html"
-
-    # Generate tree.json for sidebar navigation
-    python3 "../scripts/build_tree.py" "$outputlocation"
+    echo "ERROR: No coverage.json found at $COVERAGE_FILE"
+    echo ""
+    echo "To generate coverage data:"
+    echo "  1. Run ./setup-boost.sh to clone Boost"
+    echo "  2. Run ./docker-build.sh to build with coverage"
+    echo "  3. Copy output/coverage.json to this directory"
+    exit 1
 fi
+
+echo ""
+echo "Output generated at: $OUTPUT_DIR/index.html"
