@@ -1652,6 +1652,44 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+  /* Mobile sidebar - hidden off-screen by default */
+  .sidebar {
+    transform: translateX(-100%);
+    width: var(--sidebar-width);
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 0;
+    transition: transform var(--transition-normal);
+  }
+
+  /* Show sidebar when mobile-open */
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Main content takes full width on mobile */
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .main-header {
+    margin: 0;
+    border-radius: 0;
+    top: 0;
+  }
+
+  /* Show hamburger menu button */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Show backdrop when sidebar open */
+  .sidebar.mobile-open ~ .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+  }
+
   .content-wrapper {
     padding: 16px;
   }
@@ -1673,6 +1711,45 @@ a:hover {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* Mobile menu button - hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.mobile-menu-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Sidebar backdrop for mobile */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
 }
 
 /* ===========================================
@@ -1781,6 +1858,7 @@ a:hover {
   document.addEventListener('DOMContentLoaded', function() {
     initTheme();
     initSidebar();
+    initMobileMenu();
     initFileTree();
     initBreadcrumbs();
     initSearch();
@@ -2026,6 +2104,44 @@ a:hover {
         cancelExpand();
       } else if (!sidebar.classList.contains('hover-expand') && !hoverTimeout) {
         scheduleExpand();
+      }
+    });
+  }
+
+  // ===========================================
+  // Mobile Menu
+  // ===========================================
+
+  function initMobileMenu() {
+    var sidebar = document.getElementById('sidebar');
+    var menuBtn = document.getElementById('mobile-menu-btn');
+    var backdrop = document.getElementById('sidebar-backdrop');
+
+    if (!menuBtn || !sidebar) return;
+
+    // Open sidebar on hamburger click
+    menuBtn.addEventListener('click', function() {
+      sidebar.classList.add('mobile-open');
+    });
+
+    // Close on backdrop click
+    if (backdrop) {
+      backdrop.addEventListener('click', function() {
+        sidebar.classList.remove('mobile-open');
+      });
+    }
+
+    // Close when clicking a navigation link
+    sidebar.addEventListener('click', function(e) {
+      if (e.target.closest('a[href]')) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+        sidebar.classList.remove('mobile-open');
       }
     });
   }
@@ -2413,9 +2529,15 @@ a:hover {
         </div>
       </aside>
 
+      <!-- Mobile sidebar backdrop -->
+      <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
       <!-- Main Content -->
       <main class="main-content">
         <header class="main-header">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" title="Open menu">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
+          </button>
           <div class="breadcrumb">
 <a href="index.html" class="breadcrumb-home">Boost.Json</a><span class="separator">/</span><span class="current">detail / ryu</span>          </div>
           <div class="header-actions">
@@ -2604,7 +2726,7 @@ a:hover {
 
         <footer class="main-footer">
           Created using <a href="http://gcovr.com/en/8.4">GCOVR (Version 8.4)</a>
-          at 2026-01-31 16:15:28
+          at 2026-01-31 16:54:50
         </footer>
       </main>
     </div>
