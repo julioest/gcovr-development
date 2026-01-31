@@ -4,11 +4,17 @@
 
 set -xe
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Auto-activate venv if it exists
+if [[ -f "$SCRIPT_DIR/.venv/bin/activate" ]]; then
+    source "$SCRIPT_DIR/.venv/bin/activate"
+fi
+
 export REPONAME="json"
 export ORGANIZATION="boostorg"
 GCOVRFILTER=".*/$REPONAME/.*"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/$REPONAME"
 BOOST_CI_SRC_FOLDER=$(pwd)
 
