@@ -263,8 +263,11 @@ def build_tree(output_dir):
     return tree
 
 
-def inject_tree_data(output_dir, tree):
-    """Inject tree data as JavaScript variable into all HTML files."""
+def inject_tree_data(output_dir, tree, project_name=None):
+    """Inject tree data as JavaScript variable into all HTML files.
+
+    Also fixes breadcrumb "Root" links to use project name.
+    """
     output_path = Path(output_dir)
     tree_script = f'<script>window.GCOVR_TREE_DATA={json.dumps(tree)};</script>'
 
@@ -281,6 +284,15 @@ def inject_tree_data(output_dir, tree):
                 content
             )
 
+            # Fix breadcrumb "Root" to use project name if provided
+            if project_name:
+                # Match both patterns: <a href="index.html">Root</a> or breadcrumb-home with Root
+                content = re.sub(
+                    r'(<a\s+href="index\.html"[^>]*>)Root(</a>)',
+                    rf'\g<1>{project_name}\g<2>',
+                    content
+                )
+
             # Inject before </body>
             if '</body>' in content:
                 content = content.replace('</body>', f'{tree_script}\n</body>')
@@ -291,6 +303,22 @@ def inject_tree_data(output_dir, tree):
             print(f"Warning: Could not inject into {html_file}: {e}", file=sys.stderr)
 
     return count
+
+
+def extract_project_name(output_dir):
+    """Extract project name from index.html breadcrumb."""
+    index_path = Path(output_dir) / 'index.html'
+    if index_path.exists():
+        try:
+            with open(index_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # Look for breadcrumb-home link content (this has the project title)
+            match = re.search(r'class="breadcrumb-home"[^>]*>([^<]+)</a>', content)
+            if match:
+                return match.group(1).strip()
+        except Exception:
+            pass
+    return None
 
 
 def main():
@@ -304,6 +332,11 @@ def main():
         print(f"Error: {output_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
+    # Extract project name from index.html for fixing "Root" labels
+    project_name = extract_project_name(output_dir)
+    if project_name:
+        print(f"Detected project name: {project_name}")
+
     tree = build_tree(output_dir)
 
     # Write tree.json
@@ -314,7 +347,8 @@ def main():
     print(f"Generated {tree_file} with {len(tree)} root entries")
 
     # Inject tree data into HTML files for local file:// access
-    injected = inject_tree_data(output_dir, tree)
+    # Also fix "Root" breadcrumb labels if project name was detected
+    injected = inject_tree_data(output_dir, tree, project_name)
     print(f"Injected tree data into {injected} HTML files")
 
 
