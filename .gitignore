@@ -1,9 +1,8 @@
-# Generated coverage data (temporary)
+# Generated coverage data
 *.info
 coverage.json
-coverage_sample.json
 
-# Note: gcovr-output/ is checked in as sample output
+# Note: coverage_sample.json and gcovr-output/ are checked in as samples
 
 # Boost source (clone via scripts, don't check in)
 boost-root/
