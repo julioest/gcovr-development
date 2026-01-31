@@ -2,12 +2,19 @@
 json/gcovr/
 json/gcovr-lcov/
 json/gcovr-output/
+json/*.info
+json/coverage.json
 
 # Build/test artifacts (from b2/Docker)
 boost-root/bin.v2/
+boost-root/b2
 
-# Python cache
+# Python cache and venv
 __pycache__/
+.venv/
+
+# Docker output
+output/
 
 # Claude Code
 .claude/
