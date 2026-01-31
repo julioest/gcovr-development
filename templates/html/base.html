@@ -75,9 +75,15 @@
         </div>
       </aside>
 
+      <!-- Mobile sidebar backdrop -->
+      <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
       <!-- Main Content -->
       <main class="main-content">
         <header class="main-header">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" title="Open menu">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
+          </button>
           <div class="breadcrumb">
             {% block breadcrumb %}<a href="index.html" class="breadcrumb-home">{{info.head}}</a>{% if relative_path %}<span class="separator">/</span><span class="current">{{relative_path | replace("/", " / ")}}</span>{% endif %}{% endblock %}
           </div>

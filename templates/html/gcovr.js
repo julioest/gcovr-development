@@ -7,6 +7,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     initTheme();
     initSidebar();
+    initMobileMenu();
     initFileTree();
     initBreadcrumbs();
     initSearch();
@@ -252,6 +253,44 @@
         cancelExpand();
       } else if (!sidebar.classList.contains('hover-expand') && !hoverTimeout) {
         scheduleExpand();
+      }
+    });
+  }
+
+  // ===========================================
+  // Mobile Menu
+  // ===========================================
+
+  function initMobileMenu() {
+    var sidebar = document.getElementById('sidebar');
+    var menuBtn = document.getElementById('mobile-menu-btn');
+    var backdrop = document.getElementById('sidebar-backdrop');
+
+    if (!menuBtn || !sidebar) return;
+
+    // Open sidebar on hamburger click
+    menuBtn.addEventListener('click', function() {
+      sidebar.classList.add('mobile-open');
+    });
+
+    // Close on backdrop click
+    if (backdrop) {
+      backdrop.addEventListener('click', function() {
+        sidebar.classList.remove('mobile-open');
+      });
+    }
+
+    // Close when clicking a navigation link
+    sidebar.addEventListener('click', function(e) {
+      if (e.target.closest('a[href]')) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+        sidebar.classList.remove('mobile-open');
       }
     });
   }
