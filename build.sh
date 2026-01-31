@@ -5,6 +5,9 @@
 # Usage:
 #   ./build.sh          # Full build
 #   ./build.sh --quick  # Quick build with sample data for template testing
+#
+# Environment variables:
+#   PROJECT_NAME  - Override the project name (default: auto-detected from coverage data)
 
 set -xe
 
@@ -58,12 +61,35 @@ print(f'Created sample with {len(small)} small files')
 fi
 
 if [[ -f "$COVERAGE_FILE" ]]; then
+    # Detect project name from coverage data if not set
+    if [[ -z "${PROJECT_NAME:-}" ]]; then
+        # Extract from first function namespace (e.g., boost::json::foo -> Boost.JSON)
+        PROJECT_NAME=$(python3 -c "
+import json, re
+with open('$COVERAGE_FILE') as f:
+    data = json.load(f)
+for file in data.get('files', []):
+    for line in file.get('lines', []):
+        fn = line.get('function_name', '')
+        if '::' in fn:
+            # Extract namespace like 'boost::json' -> 'Boost.JSON'
+            parts = fn.split('::')[:2]
+            if len(parts) >= 2:
+                name = '.'.join(p.capitalize() for p in parts)
+                print(name)
+                exit()
+print('Coverage Report')
+" 2>/dev/null || echo "Coverage Report")
+    fi
+    echo "Project name: $PROJECT_NAME"
+
     # Use gcovr JSON tracefile (preserves function/branch data)
     "$SCRIPT_DIR/scripts/gcovr_wrapper.py" \
         --json-add-tracefile "$COVERAGE_FILE" \
         --root "$SCRIPT_DIR/boost-root" \
         --merge-lines \
         --html-nested \
+        --html-title "$PROJECT_NAME" \
         --html-template-dir "$SCRIPT_DIR/templates/html" \
         --output "$OUTPUT_DIR/index.html"
 

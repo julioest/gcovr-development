@@ -93,22 +93,68 @@
   // ===========================================
 
   function initTheme() {
+    const selector = document.getElementById('theme-selector');
     const toggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('gcovr-theme');
+    const menu = document.getElementById('theme-menu');
+    const label = toggle ? toggle.querySelector('.theme-label') : null;
+    const options = menu ? menu.querySelectorAll('.theme-option') : [];
+    const savedTheme = localStorage.getItem('gcovr-theme') || 'system';
 
-    // Apply saved theme or default to dark
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
+    // Get system preference
+    function getSystemTheme() {
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }
 
-    if (toggle) {
-      toggle.addEventListener('click', function() {
-        const current = document.documentElement.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('gcovr-theme', next);
+    // Apply theme to document
+    function applyTheme(theme) {
+      const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
+      document.documentElement.setAttribute('data-theme', effectiveTheme);
+      document.documentElement.setAttribute('data-theme-setting', theme);
+      if (label) {
+        label.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+      }
+      // Update active state in menu
+      options.forEach(function(opt) {
+        opt.classList.toggle('active', opt.getAttribute('data-theme') === theme);
       });
     }
+
+    // Apply saved theme
+    applyTheme(savedTheme);
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function() {
+      const current = localStorage.getItem('gcovr-theme') || 'system';
+      if (current === 'system') {
+        applyTheme('system');
+      }
+    });
+
+    // Toggle menu
+    if (toggle && selector) {
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        selector.classList.toggle('open');
+      });
+    }
+
+    // Handle option selection
+    options.forEach(function(option) {
+      option.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const theme = option.getAttribute('data-theme');
+        localStorage.setItem('gcovr-theme', theme);
+        applyTheme(theme);
+        selector.classList.remove('open');
+      });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      if (selector && !selector.contains(e.target)) {
+        selector.classList.remove('open');
+      }
+    });
   }
 
   // ===========================================
@@ -149,8 +195,9 @@
   function initSidebar() {
     const sidebar = document.getElementById('sidebar');
     const toggle = document.getElementById('sidebar-toggle');
+    const header = sidebar ? sidebar.querySelector('.sidebar-header') : null;
 
-    if (!sidebar || !toggle) return;
+    if (!sidebar) return;
 
     // Load saved state
     const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
@@ -158,27 +205,53 @@
       sidebar.classList.add('collapsed');
     }
 
-    toggle.addEventListener('click', function() {
-      sidebar.classList.toggle('collapsed');
-      localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
-    });
+    // Toggle button
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        sidebar.classList.remove('hover-expand');
+        localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      });
+    }
 
-    // Mobile: open sidebar when clicked outside should close it
-    document.addEventListener('click', function(e) {
-      if (window.innerWidth <= 1024) {
-        if (sidebar.classList.contains('open') &&
-            !sidebar.contains(e.target) &&
-            e.target !== toggle &&
-            !toggle.contains(e.target)) {
-          sidebar.classList.remove('open');
-        }
+    // Hover expand - only when not over header, with delay
+    var hoverTimeout = null;
+    var HOVER_DELAY = 200; // ms delay before expanding
+
+    function scheduleExpand() {
+      if (hoverTimeout) return; // already scheduled
+      hoverTimeout = setTimeout(function() {
+        sidebar.classList.add('hover-expand');
+      }, HOVER_DELAY);
+    }
+
+    function cancelExpand() {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = null;
       }
+      sidebar.classList.remove('hover-expand');
+    }
+
+    sidebar.addEventListener('mouseenter', function(e) {
+      if (!sidebar.classList.contains('collapsed')) return;
+      if (header && header.contains(e.target)) return;
+      scheduleExpand();
     });
 
-    // Mobile toggle
-    toggle.addEventListener('click', function() {
-      if (window.innerWidth <= 1024) {
-        sidebar.classList.toggle('open');
+    sidebar.addEventListener('mouseleave', function() {
+      cancelExpand();
+    });
+
+    // Track mouse movement to handle header boundary
+    sidebar.addEventListener('mousemove', function(e) {
+      if (!sidebar.classList.contains('collapsed')) return;
+      var rect = header.getBoundingClientRect();
+      var isOverHeader = e.clientY < rect.bottom;
+      if (isOverHeader) {
+        cancelExpand();
+      } else if (!sidebar.classList.contains('hover-expand') && !hoverTimeout) {
+        scheduleExpand();
       }
     });
   }
