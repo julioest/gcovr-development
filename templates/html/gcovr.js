@@ -260,6 +260,27 @@
     }
   }
 
+  // Clean relative path prefixes like '../../../' from names
+  function cleanPathName(name) {
+    if (!name) return 'unknown';
+    // Remove leading ./ or ../
+    while (name.indexOf('./') === 0 || name.indexOf('../') === 0) {
+      if (name.indexOf('./') === 0) {
+        name = name.substring(2);
+      } else if (name.indexOf('../') === 0) {
+        name = name.substring(3);
+      }
+    }
+    return name || 'unknown';
+  }
+
+  // Get just the filename from a path
+  function getDisplayName(name) {
+    var cleaned = cleanPathName(name);
+    var lastSlash = cleaned.lastIndexOf('/');
+    return lastSlash >= 0 ? cleaned.substring(lastSlash + 1) : cleaned;
+  }
+
   function createTreeItem(item) {
     var hasChildren = item.children && item.children.length > 0;
     var isDirectory = item.isDirectory || hasChildren;
@@ -312,8 +333,9 @@
     header.appendChild(icon);
 
     // Label (with link if available)
-    // Use fullPath for tooltip if available, otherwise use name
-    var tooltipText = item.fullPath || item.name;
+    // Clean the display name to remove relative path prefixes like '../../../'
+    var displayName = getDisplayName(item.name);
+    var tooltipText = cleanPathName(item.fullPath || item.name);
     var label = document.createElement('span');
     label.className = 'tree-label';
     // Apply coverage class for coloring
@@ -324,11 +346,11 @@
     if (item.link) {
       var link = document.createElement('a');
       link.href = item.link;
-      link.textContent = item.name;
+      link.textContent = displayName;
       link.title = tooltipText;
       label.appendChild(link);
     } else {
-      label.textContent = item.name;
+      label.textContent = displayName;
     }
     header.appendChild(label);
 
