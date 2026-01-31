@@ -1628,6 +1628,49 @@ a:hover {
 }
 
 /* ===========================================
+   Mobile Menu Button & Backdrop
+   =========================================== */
+
+/* Mobile menu button - hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.mobile-menu-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Sidebar backdrop for mobile */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+/* ===========================================
    Responsive
    =========================================== */
 
@@ -1703,8 +1746,10 @@ a:hover {
     grid-template-columns: 1fr 100px;
   }
 
-  .col-lines {
-    display: none;
+  .col-lines,
+  .col-functions,
+  .col-branches {
+    display: none !important;
   }
 
   .source-header {
@@ -1713,44 +1758,6 @@ a:hover {
   }
 }
 
-/* Mobile menu button - hidden on desktop */
-.mobile-menu-btn {
-  display: none;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  padding: 0;
-  flex-shrink: 0;
-  margin-right: 12px;
-}
-
-.mobile-menu-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.mobile-menu-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Sidebar backdrop for mobile */
-.sidebar-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 99;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--transition-normal), visibility var(--transition-normal);
-}
 
 /* ===========================================
    Syntax Highlighting (Dark Theme)
@@ -3106,7 +3113,7 @@ a:hover {
 
         <footer class="main-footer">
           Created using <a href="http://gcovr.com/en/8.4">GCOVR (Version 8.4)</a>
-          at 2026-01-31 16:54:50
+          at 2026-01-31 17:39:26
         </footer>
       </main>
     </div>
