@@ -1719,6 +1719,11 @@ a:hover {
     display: flex;
   }
 
+  /* Hide sidebar toggle (pin) button on mobile */
+  .sidebar-toggle {
+    display: none;
+  }
+
   /* Show backdrop when sidebar open */
   .sidebar.mobile-open ~ .sidebar-backdrop {
     opacity: 1;
