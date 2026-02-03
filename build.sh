@@ -36,6 +36,7 @@ if [[ -f "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" ]]; then
         --merge-lines \
         --html-nested \
         --html-template-dir "$SCRIPT_DIR/templates/html" \
+        --html-title "$REPONAME" \
         --output "$outputlocation/index.html"
 
     # Generate tree.json for sidebar navigation
