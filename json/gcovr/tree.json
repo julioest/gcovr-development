@@ -131,7 +131,7 @@
             "name": "impl/from_chars.ipp",
             "coverage": "25.0",
             "coverageClass": "coverage-low",
-            "isDirectory": true,
+            "isDirectory": false,
             "link": "index.from_chars.ipp.1f79c0e3711fd7d708dc790de46627b3.html",
             "children": []
           }
@@ -278,7 +278,7 @@
             "name": "impl/d2s.ipp",
             "coverage": "99.6",
             "coverageClass": "coverage-high",
-            "isDirectory": true,
+            "isDirectory": false,
             "link": "index.d2s.ipp.5c6823db6d8cdf35aa2e1efe1dbd8e24.html",
             "children": []
           }
