@@ -540,6 +540,9 @@
         sortList(sortKey, !isAscending);
       });
     });
+
+    // Initial sort: directories first, then by filename
+    sortList('filename', true);
   }
 
   function sortList(key, ascending) {
@@ -549,6 +552,12 @@
     const rows = Array.from(container.children);
 
     rows.sort(function(a, b) {
+      // Directories always come first
+      const aIsDir = a.classList.contains('directory');
+      const bIsDir = b.classList.contains('directory');
+      if (aIsDir && !bIsDir) return -1;
+      if (!aIsDir && bIsDir) return 1;
+
       let aVal = a.dataset[key] || a.querySelector('[data-sort]')?.dataset.sort || '';
       let bVal = b.dataset[key] || b.querySelector('[data-sort]')?.dataset.sort || '';
 
