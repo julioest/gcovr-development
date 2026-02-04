@@ -3,6 +3,9 @@
 # json/gcovr-lcov/
 # json/gcovr-output/
 
+# Generated badges (these are created on ci-automation branch)
+json/gcovr/badges/
+
 # Claude Code
 .claude/
 
