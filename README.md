@@ -1,5 +1,10 @@
+# gcovr-development
 
-## gcovr development
+[![Lines](https://raw.githubusercontent.com/cppalliance/gcovr-development/ci-automation/json/gcovr/badges/coverage-lines.svg)](https://github.com/cppalliance/gcovr-development/tree/ci-automation/json/gcovr)
+[![Functions](https://raw.githubusercontent.com/cppalliance/gcovr-development/ci-automation/json/gcovr/badges/coverage-functions.svg)](https://github.com/cppalliance/gcovr-development/tree/ci-automation/json/gcovr)
+[![Branches](https://raw.githubusercontent.com/cppalliance/gcovr-development/ci-automation/json/gcovr/badges/coverage-branches.svg)](https://github.com/cppalliance/gcovr-development/tree/ci-automation/json/gcovr)
+
+## Overview
 
 When gcovr is run with the --html-template-dir flag, customized templates may be used to modify the appearance of html.  
 
