@@ -97,7 +97,6 @@
 
   function initTheme() {
     const toggle = document.getElementById('theme-toggle');
-    const label = toggle ? toggle.querySelector('.theme-label') : null;
     const iconSun = toggle ? toggle.querySelector('.icon-sun') : null;
     const iconMoon = toggle ? toggle.querySelector('.icon-moon') : null;
 
@@ -115,11 +114,8 @@
     // Apply theme to document
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
-      if (label) {
-        label.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
-      }
-      if (iconSun) iconSun.style.display = (theme === 'light') ? 'block' : 'none';
-      if (iconMoon) iconMoon.style.display = (theme === 'dark') ? 'block' : 'none';
+      if (iconSun) iconSun.style.display = (theme === 'dark') ? 'block' : 'none';
+      if (iconMoon) iconMoon.style.display = (theme === 'light') ? 'block' : 'none';
     }
 
     // Apply current theme
