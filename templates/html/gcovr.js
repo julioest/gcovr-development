@@ -503,6 +503,9 @@
     // Check for embedded tree data first (works for local file:// access)
     if (window.GCOVR_TREE_DATA) {
       window.GCOVR_TREE_DATA = normalizeTree(window.GCOVR_TREE_DATA);
+      deduplicateTree(window.GCOVR_TREE_DATA);
+      collapseSingleChildDirs(window.GCOVR_TREE_DATA);
+      deduplicateTree(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
       return;
     }
@@ -515,12 +518,58 @@
       })
       .then(function(tree) {
         window.GCOVR_TREE_DATA = normalizeTree(tree);
+        deduplicateTree(window.GCOVR_TREE_DATA);
+        collapseSingleChildDirs(window.GCOVR_TREE_DATA);
+        deduplicateTree(window.GCOVR_TREE_DATA);
         renderTree(treeContainer, window.GCOVR_TREE_DATA);
       })
       .catch(function(err) {
         console.log('tree.json not found, using static sidebar');
         // Keep existing static content from Jinja template
       });
+  }
+
+  // Collapse single-child directory chains: if a directory has exactly
+  // one child and that child is also a directory, absorb the grandchildren.
+  // e.g. include > boost > capy > [items] becomes include > [items]
+  function collapseSingleChildDirs(nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.isDirectory || !node.children) continue;
+      while (node.children.length === 1 && node.children[0].isDirectory &&
+             node.children[0].children && node.children[0].children.length > 0) {
+        var child = node.children[0];
+        if (!node.link && child.link) node.link = child.link;
+        node.children = child.children;
+      }
+      collapseSingleChildDirs(node.children);
+    }
+  }
+
+  // Deduplicate tree: when a node has a child with the same name
+  // (e.g. include > include), merge the child's children upward.
+  // This happens when gcovr directory pages list entries with paths
+  // that include the parent directory name.
+  function deduplicateTree(nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.children || node.children.length === 0) continue;
+      for (var j = node.children.length - 1; j >= 0; j--) {
+        var child = node.children[j];
+        if (child.name === node.name && child.isDirectory) {
+          node.children.splice(j, 1);
+          if (!node.link && child.link) node.link = child.link;
+          if (!node.coverage && child.coverage) node.coverage = child.coverage;
+          if (!node.coverageClass && child.coverageClass) node.coverageClass = child.coverageClass;
+          if (child.children) {
+            for (var k = 0; k < child.children.length; k++) {
+              node.children.push(child.children[k]);
+            }
+          }
+        }
+      }
+      deduplicateTree(node.children);
+    }
   }
 
   // Normalize tree: expand multi-segment node names (e.g. "capy/buffers")
