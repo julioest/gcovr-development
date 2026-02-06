@@ -9,6 +9,8 @@
     <script>
       // Apply theme and font size immediately to prevent flash
       (function() {
+        document.documentElement.classList.add('no-transitions');
+
         var saved = localStorage.getItem('gcovr-theme');
         var theme = (saved === 'light' || saved === 'dark') ? saved
           : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';

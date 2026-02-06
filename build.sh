@@ -22,11 +22,16 @@ if [[ -f "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" ]]; then
     # The .info file contains absolute paths from the original build environment,
     # which we auto-detect and rewrite to match the local machine's paths.
     # Use 'boost-root' as anchor since it's consistently named across all builds
-    ORIGINAL_PATH=$(grep -m1 "^SF:" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" | sed 's|^SF:||' | sed 's|/boost-root/.*||')
+    ORIGINAL_PREFIX=$(grep -m1 "^SF:" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" | sed 's|^SF:||' | sed 's|/boost-root/.*||')
     TEMP_COVERAGE="/tmp/coverage_local.info"
     TEMP_XML="/tmp/coverage.xml"
 
-    sed "s|$ORIGINAL_PATH|$SCRIPT_DIR|g" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" > "$TEMP_COVERAGE"
+    if [ -z "$ORIGINAL_PREFIX" ]; then
+        # Paths start at /boost-root/ with no prefix
+        sed "s|/boost-root/|$SCRIPT_DIR/boost-root/|g" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" > "$TEMP_COVERAGE"
+    else
+        sed "s|$ORIGINAL_PREFIX|$SCRIPT_DIR|g" "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" > "$TEMP_COVERAGE"
+    fi
     lcov_cobertura "$TEMP_COVERAGE" -o "$TEMP_XML"
     sed -i.bak "s|filename=\"\.\./boost-root/|filename=\"$SCRIPT_DIR/boost-root/|g" "$TEMP_XML"
 

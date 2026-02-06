@@ -16,6 +16,11 @@
     initSorting();
     initToggleButtons();
     initTreeControls();
+
+    // Re-enable transitions after initial render
+    requestAnimationFrame(function() {
+      document.documentElement.classList.remove('no-transitions');
+    });
   });
 
   // ===========================================
@@ -42,14 +47,20 @@
 
   function initBreadcrumbs() {
     var currentSpan = document.querySelector('.breadcrumb .current');
-    if (!currentSpan || !window.GCOVR_TREE_DATA) return;
+    if (!currentSpan || !window.GCOVR_TREE_DATA) {
+      if (currentSpan) currentSpan.classList.add('ready');
+      return;
+    }
 
     // Find current page in tree by its HTML filename — this is unambiguous
     // since each page only appears once in the tree.
     var currentPage = window.location.pathname.split('/').pop() || 'index.html';
     var treePath = findPathInTree(window.GCOVR_TREE_DATA, currentPage);
 
-    if (!treePath || treePath.length === 0) return;
+    if (!treePath || treePath.length === 0) {
+      currentSpan.classList.add('ready');
+      return;
+    }
 
     // Build breadcrumb from the tree path (ancestor nodes → current node)
     var fragment = document.createDocumentFragment();
@@ -83,6 +94,7 @@
 
     currentSpan.innerHTML = '';
     currentSpan.appendChild(fragment);
+    currentSpan.classList.add('ready');
 
     // Update source-filename to match breadcrumb path
     var sourceFilename = document.querySelector('.source-filename');
