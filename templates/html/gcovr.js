@@ -51,6 +51,7 @@
     var currentNodes = window.GCOVR_TREE_DATA;
     var i = 0;
     var needSep = false;
+    var matchedSegments = [];
 
     while (i < segments.length) {
       // Greedy match: try longest possible sequence of segments against node names
@@ -78,7 +79,8 @@
           fragment.appendChild(sep);
         }
         needSep = true;
-        var displayText = segments.slice(i, i + matchLen).join(' / ');
+        var displayText = foundNode.name;
+        matchedSegments.push(foundNode.name);
         if (foundNode.link && !isLast) {
           var a = document.createElement('a');
           a.href = foundNode.link;
@@ -93,17 +95,22 @@
         currentNodes = foundNode.children || [];
         i += matchLen;
       } else {
-        if (needSep) {
-          var sep = document.createElement('span');
-          sep.className = 'separator';
-          sep.textContent = '/';
-          fragment.appendChild(sep);
+        // Skip unmatched intermediate segments (collapsed out of tree)
+        // But always render the last segment (current file)
+        if (i === segments.length - 1) {
+          if (needSep) {
+            var sep = document.createElement('span');
+            sep.className = 'separator';
+            sep.textContent = '/';
+            fragment.appendChild(sep);
+          }
+          needSep = true;
+          var span = document.createElement('span');
+          span.className = 'current-file';
+          span.textContent = segments[i];
+          fragment.appendChild(span);
+          matchedSegments.push(segments[i]);
         }
-        needSep = true;
-        var span = document.createElement('span');
-        span.className = 'current-file';
-        span.textContent = segments[i];
-        fragment.appendChild(span);
         i++;
       }
     }
@@ -114,7 +121,7 @@
     // Update source-filename to match breadcrumb path
     var sourceFilename = document.querySelector('.source-filename');
     if (sourceFilename) {
-      sourceFilename.textContent = segments.join('/');
+      sourceFilename.textContent = matchedSegments.join('/');
     }
   }
 
