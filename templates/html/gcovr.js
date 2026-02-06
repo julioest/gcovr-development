@@ -17,9 +17,12 @@
     initToggleButtons();
     initTreeControls();
 
-    // Re-enable transitions after initial render
+    // Re-enable transitions after all init (including search restore)
+    // has completed so the first paint is the final state
     requestAnimationFrame(function() {
-      document.documentElement.classList.remove('no-transitions');
+      requestAnimationFrame(function() {
+        document.documentElement.classList.remove('no-transitions');
+      });
     });
   });
 
@@ -503,6 +506,9 @@
         collapseSingleChildDirs(window.GCOVR_TREE_DATA);
         deduplicateTree(window.GCOVR_TREE_DATA);
         renderTree(treeContainer, window.GCOVR_TREE_DATA);
+        // Re-run breadcrumbs and search now that the tree exists
+        initBreadcrumbs();
+        initSearch();
       })
       .catch(function(err) {
         console.log('tree.json not found, using static sidebar');
@@ -866,13 +872,13 @@
       }, 150);
     });
 
-    // Restore search state from sessionStorage on page load
+    // Restore search state from sessionStorage on page load (synchronous
+    // since initFileTree has already built the tree before initSearch runs)
     var savedSearch = sessionStorage.getItem('gcovr-search');
     if (savedSearch) {
       searchInput.value = savedSearch;
       updateClearButton();
-      // Delay to let the tree build first
-      setTimeout(function() { performSearch(savedSearch); }, 0);
+      performSearch(savedSearch);
     }
 
     function performSearch(value) {
