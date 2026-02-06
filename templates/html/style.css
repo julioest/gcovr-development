@@ -1716,12 +1716,23 @@ body.sidebar-resizing .main-content {
 
 .branch-summary, .condition-summary, .decision-summary, .call-summary {
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
 }
 
 .branch-summary:hover, .condition-summary:hover, .decision-summary:hover, .call-summary:hover {
   background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 .branch-popup, .condition-popup, .decision-popup, .call-popup {
@@ -1737,6 +1748,7 @@ body.sidebar-resizing .main-content {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   font-size: var(--font-size-xs);
   line-height: 1.6;
+  text-align: left;
 }
 
 .function-name {
