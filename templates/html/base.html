@@ -17,7 +17,7 @@
         // Apply saved font size
         var fontSize = localStorage.getItem('gcovr-font-size');
         if (fontSize) {
-          var baseSize = 15 * (parseInt(fontSize, 10) / 100);
+          var baseSize = 16 * (parseInt(fontSize, 10) / 100);
           document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
         }
       })();

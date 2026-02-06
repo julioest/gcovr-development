@@ -83,13 +83,13 @@
   --font-mono: 'SF Mono', 'Fira Code', Consolas, 'Liberation Mono', Menlo, monospace;
 
   /* Font sizes - base scale (can be adjusted via JS) */
-  --font-size-base: 15px;
+  --font-size-base: 16px;
   --font-size-xs: calc(var(--font-size-base) * 0.75);
   --font-size-sm: calc(var(--font-size-base) * 0.867);
   --font-size-md: var(--font-size-base);
   --font-size-lg: calc(var(--font-size-base) * 1.067);
   --font-size-xl: calc(var(--font-size-base) * 1.2);
-  --font-size-code: calc(var(--font-size-base) * 0.9);
+  --font-size-code: calc(var(--font-size-base) * 0.9375);
 
   /* ===========================================
      Radius
@@ -309,7 +309,7 @@ body.sidebar-resizing .main-content {
 }
 
 .sidebar-logo .boost-wordmark {
-  height: 32px;
+  height: 28px;
   width: auto;
   flex-shrink: 0;
   transition: transform var(--transition-fast);
@@ -1102,7 +1102,7 @@ body.sidebar-resizing .main-content {
 }
 
 .breadcrumb a {
-  color: var(--text-secondary);
+  color: var(--accent-blue);
 }
 
 .breadcrumb a:hover {
@@ -1149,9 +1149,10 @@ body.sidebar-resizing .main-content {
 .content-wrapper {
   flex: 1;
   padding: 24px;
-  max-width: 1600px;
+  padding-right: 12px;
+  padding-left: 0;
   width: 100%;
-  margin: 0 auto;
+  margin-left: 0;
 }
 
 .main-footer {
@@ -1603,8 +1604,8 @@ body.sidebar-resizing .main-content {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  line-height: 1.5;
+  font-size: var(--font-size-code);
+  line-height: 0.75;
 }
 
 .source-table thead {

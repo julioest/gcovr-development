@@ -181,7 +181,7 @@
     function applyFontSize(index) {
       currentIndex = index;
       var size = sizes[index];
-      var baseSize = 15 * (size / 100);
+      var baseSize = 16 * (size / 100);
       document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
       slider.value = index;
       localStorage.setItem('gcovr-font-size', size);
