@@ -41,6 +41,9 @@ if [[ -f "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" ]]; then
 
     # Generate tree.json for sidebar navigation
     python3 "$SCRIPT_DIR/scripts/build_tree.py" "$outputlocation"
+
+    # Generate coverage badges
+    python3 "$SCRIPT_DIR/scripts/generate_badges.py" "$outputlocation"
 else
     # CI/Linux: gcovr reads coverage data directly
     cd ../boost-root
@@ -58,4 +61,7 @@ else
 
     # Generate tree.json for sidebar navigation
     python3 "../scripts/build_tree.py" "$outputlocation"
+
+    # Generate coverage badges
+    python3 "../scripts/generate_badges.py" "$outputlocation"
 fi
