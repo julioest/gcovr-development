@@ -57,11 +57,13 @@ else
         --exclude '.*/extra/.*' \
         --filter "$GCOVRFILTER" \
         --html \
-        --output "$outputlocation/index.html"
+        --output "$outputlocation/index.html" \
+        --json-summary-pretty \
+        --json-summary "$outputlocation/summary.json"
 
     # Generate tree.json for sidebar navigation
     python3 "../scripts/build_tree.py" "$outputlocation"
 
     # Generate coverage badges
-    python3 "../scripts/generate_badges.py" "$outputlocation"
+    python3 "../scripts/generate_badges.py" "$outputlocation" --json "$outputlocation/summary.json"
 fi
