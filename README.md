@@ -74,4 +74,30 @@ git config --global http.postBuffer 157286400
 
 The entire contents of this repo can be recreated by going into the json directory `cd json` and running the script https://github.com/cppalliance/ci-automation/blob/master/scripts/lcov-jenkins-gcc-13.sh 
 
+### Adding Coverage Badges to Your Project
 
+To display coverage badges in your repository's README, use the following Markdown snippets. Replace `{branch}` with the branch name (e.g. `develop`, `master`) and `{repo}` with your repository name (e.g. `json`, `capy`).
+
+**Available badges:**
+
+| Badge | URL |
+|-------|-----|
+| Lines | `https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-lines.svg` |
+| Functions | `https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-functions.svg` |
+| Branches | `https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-branches.svg` |
+
+**Markdown to copy into your README:**
+
+```markdown
+[![Lines](https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-lines.svg)](https://{branch}.{repo}.cpp.al/gcovr/index.html)
+[![Functions](https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-functions.svg)](https://{branch}.{repo}.cpp.al/gcovr/index.html)
+[![Branches](https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-branches.svg)](https://{branch}.{repo}.cpp.al/gcovr/index.html)
+```
+
+For example, for Boost.JSON on the `develop` branch:
+
+```markdown
+[![Lines](https://develop.json.cpp.al/gcovr/badges/coverage-lines.svg)](https://develop.json.cpp.al/gcovr/index.html)
+[![Functions](https://develop.json.cpp.al/gcovr/badges/coverage-functions.svg)](https://develop.json.cpp.al/gcovr/index.html)
+[![Branches](https://develop.json.cpp.al/gcovr/badges/coverage-branches.svg)](https://develop.json.cpp.al/gcovr/index.html)
+```
