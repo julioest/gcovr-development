@@ -89,15 +89,15 @@ To display coverage badges in your repository's README, use the following Markdo
 **Markdown to copy into your README:**
 
 ```markdown
-[![Lines](https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-lines.svg)](https://{branch}.{repo}.cpp.al/gcovr/index.html)
-[![Functions](https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-functions.svg)](https://{branch}.{repo}.cpp.al/gcovr/index.html)
-[![Branches](https://{branch}.{repo}.cpp.al/gcovr/badges/coverage-branches.svg)](https://{branch}.{repo}.cpp.al/gcovr/index.html)
+[![Lines](https://{organization}.github.io/{repo}/{branch}/gcovr/badges/coverage-lines.svg)](https://{organization}.github.io/{repo}/{branch}/gcovr/index.html)
+[![Functions](https://{organization}.github.io/{repo}/{branch}/gcovr/badges/coverage-functions.svg)](https://{organization}.github.io/{repo}/{branch}/gcovr/index.html)
+[![Branches](https://{organization}.github.io/{repo}/{branch}/gcovr/badges/coverage-branches.svg)](https://{organization}.github.io/{repo}/{branch}/gcovr/index.html)
 ```
 
-For example, for Boost.JSON on the `develop` branch:
+For example, for CPPAlliance.capy on the `develop` branch:
 
 ```markdown
-[![Lines](https://develop.json.cpp.al/gcovr/badges/coverage-lines.svg)](https://develop.json.cpp.al/gcovr/index.html)
-[![Functions](https://develop.json.cpp.al/gcovr/badges/coverage-functions.svg)](https://develop.json.cpp.al/gcovr/index.html)
-[![Branches](https://develop.json.cpp.al/gcovr/badges/coverage-branches.svg)](https://develop.json.cpp.al/gcovr/index.html)
+[![Lines](https://cppalliance.github.io/capy/develop/gcovr/badges/coverage-lines.svg)](https://cppalliance.github.io/capy/develop/gcovr/index.html)
+[![Functions](https://cppalliance.github.io/capy/develop/gcovr/badges/coverage-functions.svg)](https://cppalliance.github.io/capy/develop/gcovr/index.html)
+[![Branches](https://cppalliance.github.io/capy/develop/gcovr/badges/coverage-branches.svg)](https://cppalliance.github.io/capy/develop/gcovr/index.html)
 ```
