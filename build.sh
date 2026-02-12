@@ -6,7 +6,7 @@ set -xe
 
 export REPONAME="json"
 export ORGANIZATION="boostorg"
-GCOVRFILTER=".*/$REPONAME/.*"
+GCOVRFILTER=".*"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/$REPONAME"
@@ -47,16 +47,17 @@ if [[ -f "$BOOST_CI_SRC_FOLDER/coverage_filtered.info" ]]; then
 else
     # CI/Linux: gcovr reads coverage data directly
     cd ../boost-root
-    gcovr --merge-mode-functions separate -p \
+    gcovr --root "libs/$REPONAME" \
+        --merge-mode-functions separate -p \
         --merge-lines \
         --html-nested \
         --html-template-dir=../templates/html \
+        --html-title "$REPONAME" \
         --exclude-unreachable-branches \
         --exclude-throw-branches \
         --exclude '.*/test/.*' \
         --exclude '.*/extra/.*' \
         --filter "$GCOVRFILTER" \
-        --html \
         --output "$outputlocation/index.html" \
         --json-summary-pretty \
         --json-summary "$outputlocation/summary.json"
