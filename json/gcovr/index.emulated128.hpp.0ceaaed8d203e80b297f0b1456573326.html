@@ -6,15 +6,15 @@
     <title>detail/charconv/detail/emulated128.hpp - json</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script>
-      // Apply theme immediately to prevent flash
+      // Apply theme and font size immediately to prevent flash
       (function() {
-        var saved = localStorage.getItem('gcovr-theme') || 'system';
-        var theme = saved;
-        if (saved === 'system') {
-          theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-        }
+        document.documentElement.classList.add('no-transitions');
+
+        var saved = localStorage.getItem('gcovr-theme');
+        var theme = (saved === 'light' || saved === 'dark') ? saved
+          : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.setAttribute('data-theme-setting', saved);
+
       })();
     </script>
     <style type="text/css">
@@ -102,6 +102,15 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', Consolas, 'Liberation Mono', Menlo, monospace;
 
+  /* Font sizes - base scale (can be adjusted via JS) */
+  --font-size-base: 16px;
+  --font-size-xs: calc(var(--font-size-base) * 0.75);
+  --font-size-sm: calc(var(--font-size-base) * 0.867);
+  --font-size-md: var(--font-size-base);
+  --font-size-lg: calc(var(--font-size-base) * 1.067);
+  --font-size-xl: calc(var(--font-size-base) * 1.2);
+  --font-size-code: calc(var(--font-size-base) * 0.9375);
+
   /* ===========================================
      Radius
      =========================================== */
@@ -126,7 +135,7 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f6f8fa;
   --bg-tertiary: #eaeef2;
-  --bg-hover: #d0d7de;
+  --bg-hover: #e5e9ed;
   --bg-active: rgba(88, 166, 255, 0.15);
 
   /* Text */
@@ -173,9 +182,17 @@
   --code-string: #0550ae;
 }
 
+/* Suppress transitions on initial load to prevent flash */
+html.no-transitions,
+html.no-transitions *,
+html.no-transitions *::before,
+html.no-transitions *::after {
+  transition: none !important;
+}
+
 /* Smooth theme transitions */
 body, .sidebar, .main-content, .main-header, .main-footer,
-.sidebar-header, .sidebar-nav, .sidebar-footer,
+.sidebar-header, .sidebar-nav,
 .summary-card, .file-list-container, .source-container,
 .tree-item-header, .coverage-badge, .tree-coverage,
 .btn, .nav-link, input {
@@ -197,7 +214,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   line-height: 1.5;
   color: var(--text-primary);
   background: var(--bg-primary);
@@ -240,18 +257,61 @@ a:hover {
   display: flex;
   flex-direction: column;
   z-index: 100;
+  overflow: visible;
   transition: width var(--transition-normal);
-  overflow: hidden;
 }
 
 /* Collapsed state */
 .sidebar.collapsed {
   width: var(--sidebar-collapsed-width);
+  overflow: visible;
 }
 
 /* Expand on hover when collapsed - only for content area, not header */
 .sidebar.collapsed.hover-expand {
   width: var(--sidebar-width);
+}
+
+/* Sidebar Resize Handle */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 29px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 101;
+}
+
+.sidebar-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 5px;
+  height: 100%;
+  border-radius: 2.5px;
+  background: var(--bg-tertiary);
+  transform: translateX(-50%);
+  transition: background var(--transition-fast);
+}
+
+.sidebar-resize-handle:hover::after {
+  background: var(--border-color);
+}
+
+.sidebar.collapsed .sidebar-resize-handle {
+  display: none;
+}
+
+body.sidebar-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
+body.sidebar-resizing .sidebar,
+body.sidebar-resizing .main-content {
+  transition: none;
 }
 
 /* Sidebar Header */
@@ -288,7 +348,7 @@ a:hover {
 }
 
 .sidebar-logo .boost-wordmark {
-  height: 18px;
+  height: 28px;
   width: auto;
   flex-shrink: 0;
   transition: transform var(--transition-fast);
@@ -309,7 +369,7 @@ a:hover {
 }
 
 .sidebar-library {
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
   overflow: hidden;
@@ -317,7 +377,7 @@ a:hover {
 }
 
 .sidebar-subtitle {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--text-muted);
   flex-shrink: 0;
@@ -340,8 +400,14 @@ a:hover {
   display: flex;
 }
 
-.sidebar.collapsed .sidebar-header-row {
+.sidebar.collapsed:not(.hover-expand) .sidebar-header {
+  padding: 10px;
+  align-items: center;
+}
+
+.sidebar.collapsed:not(.hover-expand) .sidebar-header-row {
   justify-content: center;
+  width: 100%;
 }
 
 .sidebar.collapsed .sidebar-logo {
@@ -396,18 +462,44 @@ a:hover {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  position: relative;
 }
 
 .sidebar-search input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 28px 8px 12px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-clear {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  display: none;
+}
+
+.search-clear:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.sidebar-search.has-query .search-clear {
+  display: block;
 }
 
 .sidebar-search input:focus {
@@ -417,6 +509,20 @@ a:hover {
 
 .sidebar-search input::placeholder {
   color: var(--text-muted);
+}
+
+.search-highlight {
+  background: var(--accent-yellow, #e3b341);
+  color: var(--bg-primary);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.search-no-results {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 
 /* Hide elements when collapsed (show on hover) */
@@ -434,40 +540,9 @@ a:hover {
   pointer-events: auto;
 }
 
-/* Theme toggle stays visible when collapsed, just hide label */
-.sidebar.collapsed .sidebar-footer {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: center;
-}
-
-.sidebar.collapsed .theme-toggle {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-}
-
-.sidebar.collapsed .theme-label {
-  display: none;
-}
-
-.sidebar.collapsed.hover-expand .sidebar-footer {
-  justify-content: stretch;
-}
-
-.sidebar.collapsed.hover-expand .theme-toggle {
-  width: 100%;
-  height: 36px;
-  padding: 0 12px;
-}
-
-.sidebar.collapsed.hover-expand .theme-label {
-  display: inline;
-}
-
-/* Theme Toggle */
+/* Theme Toggle (in header) */
 .theme-toggle {
-  width: 100%;
+  width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
@@ -477,111 +552,26 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   transition: all var(--transition-fast);
-  padding: 0 12px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
-  border-color: var(--text-muted);
 }
 
 .theme-toggle svg {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
-/* Theme icons - show based on theme setting, not effective theme */
-.theme-toggle .icon-system { display: block; }
+/* Theme icons - visibility managed by JS */
 .theme-toggle .icon-sun { display: none; }
 .theme-toggle .icon-moon { display: none; }
 
-[data-theme-setting="light"] .theme-toggle .icon-system { display: none; }
-[data-theme-setting="light"] .theme-toggle .icon-sun { display: block; }
-
-[data-theme-setting="dark"] .theme-toggle .icon-system { display: none; }
-[data-theme-setting="dark"] .theme-toggle .icon-moon { display: block; }
-
 /* Theme Selector Dropdown */
-.theme-selector {
-  position: relative;
-}
-
-.theme-menu {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  margin-bottom: 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(4px);
-  transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
-  z-index: 200;
-}
-
-.theme-selector.open .theme-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.theme-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-
-.theme-option:hover {
-  background: var(--bg-hover);
-}
-
-.theme-option svg {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  color: var(--text-secondary);
-}
-
-.theme-option:hover svg {
-  color: var(--text-primary);
-}
-
-.theme-option span {
-  flex: 1;
-  text-align: left;
-}
-
-.theme-option .check {
-  opacity: 0;
-  color: var(--accent-brand);
-}
-
-.theme-option.active .check {
-  opacity: 1;
-}
-
-.theme-label {
-  font-size: 12px;
-  white-space: nowrap;
-}
 
 /* Tree Controls */
 .tree-controls {
@@ -600,7 +590,7 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -619,27 +609,11 @@ a:hover {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: 8px 0;
   scrollbar-gutter: stable;
 }
 
-.sidebar-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-tertiary);
-  margin-top: auto;
-}
-
-.sidebar-footer .theme-toggle {
-  width: 100%;
-  justify-content: center;
-  gap: 8px;
-}
-
-.theme-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
 
 .coverage-summary-mini {
   display: flex;
@@ -651,7 +625,7 @@ a:hover {
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .coverage-badge.coverage-high {
@@ -668,14 +642,14 @@ a:hover {
 
 .coverage-label {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 /* Tree View */
 .tree-loading {
   padding: 16px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .tree-item {
@@ -720,7 +694,7 @@ a:hover {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   font-family: var(--font-mono);
   flex-shrink: 0;
@@ -754,7 +728,7 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   font-family: var(--font-mono);
   flex-shrink: 0;
@@ -775,7 +749,7 @@ a:hover {
 .tree-toggle .toggle-icon {
   display: block;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   line-height: 1;
 }
 
@@ -817,12 +791,12 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--text-primary);
 }
 
 .tree-coverage {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 6px;
   border-radius: var(--radius-sm);
@@ -860,7 +834,7 @@ a:hover {
 
 .main-content {
   flex: 1;
-  margin-left: calc(var(--sidebar-width) + 32px);
+  margin-left: calc(var(--sidebar-width) + 41px);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -868,7 +842,7 @@ a:hover {
 }
 
 .sidebar.collapsed ~ .main-content {
-  margin-left: calc(var(--sidebar-collapsed-width) + 32px);
+  margin-left: calc(var(--sidebar-collapsed-width) + 41px);
 }
 
 .main-header {
@@ -879,7 +853,7 @@ a:hover {
   align-items: center;
   gap: 16px;
   margin: 12px 12px 0 0;
-  padding: 12px 24px;
+  padding: 12px 10px 12px 24px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -891,7 +865,7 @@ a:hover {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -903,7 +877,7 @@ a:hover {
 }
 
 .breadcrumb a {
-  color: var(--text-secondary);
+  color: var(--accent-blue);
 }
 
 .breadcrumb a:hover {
@@ -917,6 +891,11 @@ a:hover {
 
 .breadcrumb .current {
   color: var(--text-primary);
+  visibility: hidden;
+}
+
+.breadcrumb .current.ready {
+  visibility: visible;
 }
 
 .breadcrumb-home {
@@ -932,14 +911,14 @@ a:hover {
 
 .breadcrumb-title {
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   color: var(--text-primary);
   margin-right: 8px;
 }
 
 .breadcrumb-label {
   font-weight: 400;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
 }
 
@@ -950,16 +929,17 @@ a:hover {
 .content-wrapper {
   flex: 1;
   padding: 24px;
-  max-width: 1400px;
+  padding-right: 12px;
+  padding-left: 0;
   width: 100%;
-  margin: 0 auto;
+  margin-left: 0;
 }
 
 .main-footer {
   padding: 24px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   border-top: 1px solid var(--border-color);
 }
 
@@ -997,7 +977,7 @@ a:hover {
 
 .summary-card-header h3 {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1047,7 +1027,7 @@ a:hover {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 
@@ -1059,7 +1039,7 @@ a:hover {
   display: flex;
   justify-content: space-between;
   padding: 4px 0;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .stat-row .stat-label {
@@ -1080,7 +1060,7 @@ a:hover {
 .legend-item {
   padding: 4px 12px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -1110,6 +1090,58 @@ a:hover {
   overflow: hidden;
 }
 
+/* View Toggle Toolbar */
+.file-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.view-toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.view-toggle-btn.active {
+  background: var(--accent-blue);
+  color: #fff;
+}
+
+.view-toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.view-toggle-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .file-list-header {
   display: grid;
   grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 100px 100px 100px;
@@ -1117,7 +1149,7 @@ a:hover {
   padding: 12px 16px;
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1245,14 +1277,14 @@ a:hover {
 
 .coverage-percent {
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   min-width: 48px;
   text-align: right;
 }
 
 .col-lines, .col-functions, .col-branches {
   text-align: right;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .file-list-header .col-lines,
@@ -1289,7 +1321,7 @@ a:hover {
 
 .source-info h2 {
   margin: 0 0 8px 0;
-  font-size: 18px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
   font-family: var(--font-mono);
@@ -1302,7 +1334,7 @@ a:hover {
 }
 
 .source-stats .stat {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
@@ -1324,7 +1356,7 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1336,7 +1368,7 @@ a:hover {
 
 .btn.btn-sm {
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .btn-count {
@@ -1385,7 +1417,7 @@ a:hover {
 
 .source-title {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -1404,8 +1436,8 @@ a:hover {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: var(--font-size-code);
+  line-height: 1.2;
 }
 
 .source-table thead {
@@ -1431,8 +1463,8 @@ a:hover {
 }
 
 .source-table td {
-  padding: 0 12px;
-  vertical-align: top;
+  padding: 4px 12px;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border-muted);
 }
 
@@ -1441,14 +1473,16 @@ a:hover {
   border-right: 1px solid var(--border-color);
   text-align: right;
   user-select: none;
-  width: 60px;
+  white-space: nowrap;
+  width: 1%;
+  padding: 4px 6px;
 }
 
 .source-table .col-lineno a {
   color: var(--text-muted);
   text-decoration: none;
   display: block;
-  padding: 2px 0;
+  padding: 0;
 }
 
 .source-table .col-lineno a:hover {
@@ -1462,13 +1496,15 @@ a:hover {
   background: var(--bg-tertiary);
   border-right: 1px solid var(--border-color);
   text-align: center;
-  width: 60px;
+  width: 50px;
 }
 
 .source-table .col-count {
   text-align: right;
-  width: 60px;
+  white-space: nowrap;
+  width: 1%;
   color: var(--text-muted);
+  padding: 4px 6px;
 }
 
 .source-table .col-source {
@@ -1513,12 +1549,23 @@ a:hover {
 
 .branch-summary, .condition-summary, .decision-summary, .call-summary {
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
 }
 
 .branch-summary:hover, .condition-summary:hover, .decision-summary:hover, .call-summary:hover {
   background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 .branch-popup, .condition-popup, .decision-popup, .call-popup {
@@ -1532,8 +1579,9 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   line-height: 1.6;
+  text-align: left;
 }
 
 .function-name {
@@ -1572,7 +1620,7 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   transition: all var(--transition-fast);
 }
 
@@ -1609,17 +1657,17 @@ a:hover {
 
 .summary-inline .stat-label {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .summary-inline .stat-value {
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .summary-inline .stat-detail {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .functions-container {
@@ -1636,7 +1684,7 @@ a:hover {
   padding: 12px 16px;
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1666,7 +1714,7 @@ a:hover {
 }
 
 .function-location {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
@@ -1732,26 +1780,6 @@ a:hover {
    =========================================== */
 
 @media (max-width: 1024px) {
-  .sidebar {
-    width: var(--sidebar-collapsed-width);
-  }
-
-  .main-content {
-    margin-left: calc(var(--sidebar-collapsed-width) + 24px);
-  }
-
-  .file-list-header,
-  .file-row {
-    grid-template-columns: 1fr 120px 80px;
-  }
-
-  .col-functions,
-  .col-branches {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
   /* Mobile sidebar - hidden off-screen by default */
   .sidebar {
     transform: translateX(-100%);
@@ -1768,7 +1796,7 @@ a:hover {
     transform: translateX(0);
   }
 
-  /* Main content takes full width on mobile */
+  /* Main content takes full width */
   .main-content {
     margin-left: 0 !important;
   }
@@ -1784,8 +1812,12 @@ a:hover {
     display: flex;
   }
 
-  /* Hide sidebar toggle (pin) button on mobile */
+  /* Hide sidebar toggle (pin) button and resize handle */
   .sidebar-toggle {
+    display: none;
+  }
+
+  .sidebar-resize-handle {
     display: none;
   }
 
@@ -1799,6 +1831,18 @@ a:hover {
     padding: 16px;
   }
 
+  .file-list-header,
+  .file-row {
+    grid-template-columns: 1fr 120px 80px;
+  }
+
+  .col-functions,
+  .col-branches {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
   .summary-cards {
     grid-template-columns: 1fr;
   }
@@ -1927,47 +1971,71 @@ a:hover {
   document.addEventListener('DOMContentLoaded', function() {
     initTheme();
     initSidebar();
+    initSidebarResize();
     initMobileMenu();
     initFileTree();
     initBreadcrumbs();
     initSearch();
     initSorting();
+    initViewToggle();
     initToggleButtons();
     initTreeControls();
+
+    // Re-enable transitions after all init (including search restore)
+    // has completed so the first paint is the final state
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        document.documentElement.classList.remove('no-transitions');
+      });
+    });
   });
 
   // ===========================================
   // Breadcrumb Links
   // ===========================================
 
-  function initBreadcrumbs() {
-    var currentSpan = document.querySelector('.breadcrumb .current');
-    if (!currentSpan || !window.GCOVR_TREE_DATA) return;
-
-    var pathText = currentSpan.textContent.trim();
-    var segments = pathText.split(' / ');
-    if (segments.length <= 1) return;
-
-    // Auto-detect and skip prefix segments not in tree (e.g., "boost", "json")
-    // Find the first segment that matches a root node in the tree
-    var startIndex = 0;
-    var rootNames = window.GCOVR_TREE_DATA.map(function(n) { return n.name; });
-    for (var i = 0; i < segments.length; i++) {
-      if (rootNames.indexOf(segments[i]) !== -1) {
-        startIndex = i;
-        break;
+  // Find a node in the tree by its link (HTML filename) and return
+  // the full ancestor path as an array of nodes from root to target.
+  function findPathInTree(nodes, targetLink) {
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (node.link === targetLink) {
+        return [node];
+      }
+      if (node.children) {
+        var childPath = findPathInTree(node.children, targetLink);
+        if (childPath) {
+          return [node].concat(childPath);
+        }
       }
     }
-    // Skip prefix segments
-    segments = segments.slice(startIndex);
-    if (segments.length === 0) return;
+    return null;
+  }
 
-    // Create linked breadcrumb by traversing tree
+  function initBreadcrumbs() {
+    var currentSpan = document.querySelector('.breadcrumb .current');
+    if (!currentSpan || !window.GCOVR_TREE_DATA) {
+      if (currentSpan) currentSpan.classList.add('ready');
+      return;
+    }
+
+    // Find current page in tree by its HTML filename — this is unambiguous
+    // since each page only appears once in the tree.
+    var currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    var treePath = findPathInTree(window.GCOVR_TREE_DATA, currentPage);
+
+    if (!treePath || treePath.length === 0) {
+      currentSpan.classList.add('ready');
+      return;
+    }
+
+    // Build breadcrumb from the tree path (ancestor nodes → current node)
     var fragment = document.createDocumentFragment();
-    var currentNodes = window.GCOVR_TREE_DATA;
+    var matchedSegments = [];
 
-    for (var i = 0; i < segments.length; i++) {
-      var segment = segments[i];
+    for (var i = 0; i < treePath.length; i++) {
+      var node = treePath[i];
+      var isLast = (i === treePath.length - 1);
 
       if (i > 0) {
         var sep = document.createElement('span');
@@ -1976,37 +2044,30 @@ a:hover {
         fragment.appendChild(sep);
       }
 
-      // Find this segment in current level of tree
-      var foundNode = null;
-      for (var j = 0; j < currentNodes.length; j++) {
-        if (currentNodes[j].name === segment) {
-          foundNode = currentNodes[j];
-          break;
-        }
-      }
+      matchedSegments.push(node.name);
 
-      if (foundNode && foundNode.link && i < segments.length - 1) {
-        // Directory segment with link - make it clickable
+      if (node.link && !isLast) {
         var a = document.createElement('a');
-        a.href = foundNode.link;
-        a.textContent = segment;
+        a.href = node.link;
+        a.textContent = node.name;
         fragment.appendChild(a);
-        // Move to children for next iteration
-        currentNodes = foundNode.children || [];
       } else {
-        // Last segment (current file) or no link found
         var span = document.createElement('span');
         span.className = 'current-file';
-        span.textContent = segment;
+        span.textContent = node.name;
         fragment.appendChild(span);
-        if (foundNode && foundNode.children) {
-          currentNodes = foundNode.children;
-        }
       }
     }
 
     currentSpan.innerHTML = '';
     currentSpan.appendChild(fragment);
+    currentSpan.classList.add('ready');
+
+    // Update source-filename to match breadcrumb path
+    var sourceFilename = document.querySelector('.source-filename');
+    if (sourceFilename) {
+      sourceFilename.textContent = matchedSegments.join('/');
+    }
   }
 
   // ===========================================
@@ -2014,68 +2075,48 @@ a:hover {
   // ===========================================
 
   function initTheme() {
-    const selector = document.getElementById('theme-selector');
     const toggle = document.getElementById('theme-toggle');
-    const menu = document.getElementById('theme-menu');
-    const label = toggle ? toggle.querySelector('.theme-label') : null;
-    const options = menu ? menu.querySelectorAll('.theme-option') : [];
-    const savedTheme = localStorage.getItem('gcovr-theme') || 'system';
+    const iconSun = toggle ? toggle.querySelector('.icon-sun') : null;
+    const iconMoon = toggle ? toggle.querySelector('.icon-moon') : null;
 
     // Get system preference
     function getSystemTheme() {
       return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }
 
+    // Get effective theme: saved preference or OS default
+    function getEffectiveTheme() {
+      var saved = localStorage.getItem('gcovr-theme');
+      return (saved === 'light' || saved === 'dark') ? saved : getSystemTheme();
+    }
+
     // Apply theme to document
     function applyTheme(theme) {
-      const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
-      document.documentElement.setAttribute('data-theme', effectiveTheme);
-      document.documentElement.setAttribute('data-theme-setting', theme);
-      if (label) {
-        label.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
-      }
-      // Update active state in menu
-      options.forEach(function(opt) {
-        opt.classList.toggle('active', opt.getAttribute('data-theme') === theme);
-      });
+      document.documentElement.setAttribute('data-theme', theme);
+      if (iconSun) iconSun.style.display = (theme === 'dark') ? 'block' : 'none';
+      if (iconMoon) iconMoon.style.display = (theme === 'light') ? 'block' : 'none';
     }
 
-    // Apply saved theme
-    applyTheme(savedTheme);
+    // Apply current theme
+    applyTheme(getEffectiveTheme());
 
-    // Listen for system theme changes
+    // Listen for system theme changes — only apply if no stored preference
     window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function() {
-      const current = localStorage.getItem('gcovr-theme') || 'system';
-      if (current === 'system') {
-        applyTheme('system');
+      var saved = localStorage.getItem('gcovr-theme');
+      if (saved !== 'light' && saved !== 'dark') {
+        applyTheme(getSystemTheme());
       }
     });
 
-    // Toggle menu
-    if (toggle && selector) {
-      toggle.addEventListener('click', function(e) {
-        e.stopPropagation();
-        selector.classList.toggle('open');
+    // Toggle between light and dark on click
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        var current = getEffectiveTheme();
+        var next = (current === 'dark') ? 'light' : 'dark';
+        localStorage.setItem('gcovr-theme', next);
+        applyTheme(next);
       });
     }
-
-    // Handle option selection
-    options.forEach(function(option) {
-      option.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const theme = option.getAttribute('data-theme');
-        localStorage.setItem('gcovr-theme', theme);
-        applyTheme(theme);
-        selector.classList.remove('open');
-      });
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', function(e) {
-      if (selector && !selector.contains(e.target)) {
-        selector.classList.remove('open');
-      }
-    });
   }
 
   // ===========================================
@@ -2095,6 +2136,7 @@ a:hover {
             if (toggle) toggle.textContent = '−';
           }
         });
+        saveExpandedFolders();
       });
     }
 
@@ -2105,6 +2147,7 @@ a:hover {
           var toggle = item.querySelector(':scope > .tree-item-header > .tree-folder-toggle');
           if (toggle) toggle.textContent = '+';
         });
+        saveExpandedFolders();
       });
     }
   }
@@ -2131,14 +2174,33 @@ a:hover {
       toggle.addEventListener('click', function() {
         sidebar.classList.toggle('collapsed');
         sidebar.classList.remove('hover-expand');
-        localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+        var isNowCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('sidebar-collapsed', isNowCollapsed);
+        // Restore custom width when un-collapsing
+        if (!isNowCollapsed) {
+          var savedWidth = localStorage.getItem('gcovr-sidebar-width');
+          if (savedWidth) {
+            document.documentElement.style.setProperty('--sidebar-width', savedWidth + 'px');
+          }
+        }
       });
     }
 
-    // Hover expand - expands when hovering sidebar content (not header)
+    // Hover expand - expands when hovering sidebar content (not header or no-expand zones)
     var hoverTimeout = null;
     var HOVER_DELAY = 150; // ms delay before expanding
     var isOverContent = false;
+
+    // Check if element is within a no-expand zone
+    function isInNoExpandZone(el) {
+      while (el && el !== sidebar) {
+        if (el.classList && el.classList.contains('no-expand')) {
+          return true;
+        }
+        el = el.parentElement;
+      }
+      return false;
+    }
 
     function scheduleExpand() {
       if (hoverTimeout) return; // already scheduled
@@ -2161,8 +2223,8 @@ a:hover {
 
     sidebar.addEventListener('mouseenter', function(e) {
       if (!sidebar.classList.contains('collapsed')) return;
-      // Check if entering over content area (not header)
-      if (!header.contains(e.target)) {
+      // Check if entering over content area (not header or no-expand zones)
+      if (!header.contains(e.target) && !isInNoExpandZone(e.target)) {
         isOverContent = true;
         scheduleExpand();
       }
@@ -2171,7 +2233,7 @@ a:hover {
     sidebar.addEventListener('mousemove', function(e) {
       if (!sidebar.classList.contains('collapsed')) return;
       var wasOverContent = isOverContent;
-      isOverContent = !header.contains(e.target);
+      isOverContent = !header.contains(e.target) && !isInNoExpandZone(e.target);
 
       if (isOverContent && !wasOverContent && !sidebar.classList.contains('hover-expand')) {
         scheduleExpand();
@@ -2181,6 +2243,67 @@ a:hover {
     sidebar.addEventListener('mouseleave', function() {
       isOverContent = false;
       cancelExpand();
+    });
+  }
+
+  // ===========================================
+  // Sidebar Resize
+  // ===========================================
+
+  function initSidebarResize() {
+    var sidebar = document.getElementById('sidebar');
+    var handle = document.getElementById('sidebar-resize-handle');
+    if (!sidebar || !handle) return;
+
+    var MIN_WIDTH = 200;
+    var startX, startWidth;
+
+    // Restore saved width
+    var savedWidth = localStorage.getItem('gcovr-sidebar-width');
+    if (savedWidth && !sidebar.classList.contains('collapsed')) {
+      var w = parseInt(savedWidth, 10);
+      if (w >= MIN_WIDTH) {
+        document.documentElement.style.setProperty('--sidebar-width', w + 'px');
+      }
+    }
+
+    function getMaxWidth() {
+      return Math.floor(window.innerWidth * 0.5);
+    }
+
+    function onMouseMove(e) {
+      var newWidth = startWidth + (e.clientX - startX);
+      var maxW = getMaxWidth();
+      if (newWidth < MIN_WIDTH) newWidth = MIN_WIDTH;
+      if (newWidth > maxW) newWidth = maxW;
+      document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+    }
+
+    function onMouseUp() {
+      document.body.classList.remove('sidebar-resizing');
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      // Save the current width
+      var computed = parseInt(getComputedStyle(sidebar).width, 10);
+      localStorage.setItem('gcovr-sidebar-width', computed);
+    }
+
+    handle.addEventListener('mousedown', function(e) {
+      if (sidebar.classList.contains('collapsed')) return;
+      e.preventDefault();
+      startX = e.clientX;
+      startWidth = parseInt(getComputedStyle(sidebar).width, 10);
+      document.body.classList.add('sidebar-resizing');
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+
+    // Double-click to reset to default width
+    var DEFAULT_WIDTH = 320;
+    handle.addEventListener('dblclick', function() {
+      if (sidebar.classList.contains('collapsed')) return;
+      document.documentElement.style.setProperty('--sidebar-width', DEFAULT_WIDTH + 'px');
+      localStorage.setItem('gcovr-sidebar-width', DEFAULT_WIDTH);
     });
   }
 
@@ -2232,6 +2355,12 @@ a:hover {
 
     // Check for embedded tree data first (works for local file:// access)
     if (window.GCOVR_TREE_DATA) {
+      window.GCOVR_TREE_DATA = normalizeTree(window.GCOVR_TREE_DATA);
+      deduplicateTree(window.GCOVR_TREE_DATA);
+      // Save full tree before collapsing for flat view (preserves intermediate dirs)
+      window.GCOVR_TREE_DATA_FULL = JSON.parse(JSON.stringify(window.GCOVR_TREE_DATA));
+      collapseSingleChildDirs(window.GCOVR_TREE_DATA);
+      deduplicateTree(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
       return;
     }
@@ -2243,12 +2372,141 @@ a:hover {
         return response.json();
       })
       .then(function(tree) {
-        renderTree(treeContainer, tree);
+        window.GCOVR_TREE_DATA = normalizeTree(tree);
+        deduplicateTree(window.GCOVR_TREE_DATA);
+        window.GCOVR_TREE_DATA_FULL = JSON.parse(JSON.stringify(window.GCOVR_TREE_DATA));
+        collapseSingleChildDirs(window.GCOVR_TREE_DATA);
+        deduplicateTree(window.GCOVR_TREE_DATA);
+        renderTree(treeContainer, window.GCOVR_TREE_DATA);
+        // Re-run breadcrumbs, search, and view toggle now that the tree exists
+        initBreadcrumbs();
+        initSearch();
+        initViewToggle();
       })
       .catch(function(err) {
         console.log('tree.json not found, using static sidebar');
         // Keep existing static content from Jinja template
       });
+  }
+
+  // Collapse single-child directory chains: if a directory has exactly
+  // one child and that child is also a directory, absorb the grandchildren.
+  // e.g. include > boost > capy > [items] becomes include > [items]
+  function collapseSingleChildDirs(nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.isDirectory || !node.children) continue;
+      while (node.children.length === 1 && node.children[0].isDirectory &&
+             node.children[0].children && node.children[0].children.length > 0) {
+        var child = node.children[0];
+        if (!node.link && child.link) node.link = child.link;
+        node.children = child.children;
+      }
+      collapseSingleChildDirs(node.children);
+    }
+  }
+
+  // Deduplicate tree: when a node has a child with the same name
+  // (e.g. include > include), merge the child's children upward.
+  // This happens when gcovr directory pages list entries with paths
+  // that include the parent directory name.
+  function deduplicateTree(nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.children || node.children.length === 0) continue;
+      for (var j = node.children.length - 1; j >= 0; j--) {
+        var child = node.children[j];
+        if (child.name === node.name && child.isDirectory) {
+          node.children.splice(j, 1);
+          if (!node.link && child.link) node.link = child.link;
+          if (!node.coverage && child.coverage) node.coverage = child.coverage;
+          if (!node.coverageClass && child.coverageClass) node.coverageClass = child.coverageClass;
+          if (child.children) {
+            for (var k = 0; k < child.children.length; k++) {
+              node.children.push(child.children[k]);
+            }
+          }
+        }
+      }
+      deduplicateTree(node.children);
+    }
+  }
+
+  // Normalize tree: expand multi-segment node names (e.g. "capy/buffers")
+  // into proper nested directory structures so the tree and breadcrumbs
+  // display correctly.
+  function normalizeTree(nodes) {
+    if (!nodes || nodes.length === 0) return nodes;
+
+    var groups = {};
+    var order = [];
+
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var slashIdx = node.name.indexOf('/');
+
+      if (slashIdx === -1) {
+        // Simple name — add directly or merge with existing group
+        if (groups[node.name]) {
+          var existing = groups[node.name];
+          if (node.link) existing.link = node.link;
+          if (node.coverage) existing.coverage = node.coverage;
+          if (node.coverageClass) existing.coverageClass = node.coverageClass;
+          if (node.children && node.children.length > 0) {
+            existing.children = (existing.children || []).concat(node.children);
+          }
+        } else {
+          var copy = {};
+          for (var key in node) {
+            if (node.hasOwnProperty(key)) copy[key] = node[key];
+          }
+          groups[node.name] = copy;
+          order.push(node.name);
+        }
+      } else {
+        // Multi-segment name — split on first '/' and group
+        var prefix = node.name.substring(0, slashIdx);
+        var rest = node.name.substring(slashIdx + 1);
+
+        if (!groups[prefix]) {
+          groups[prefix] = {
+            name: prefix,
+            isDirectory: true,
+            children: []
+          };
+          order.push(prefix);
+        }
+        if (!groups[prefix].children) groups[prefix].children = [];
+
+        // Create child node with remaining path as name
+        var childNode = {};
+        for (var key in node) {
+          if (node.hasOwnProperty(key)) childNode[key] = node[key];
+        }
+        childNode.name = rest;
+        groups[prefix].children.push(childNode);
+      }
+    }
+
+    // Build result with recursive normalization
+    var result = [];
+    for (var i = 0; i < order.length; i++) {
+      var node = groups[order[i]];
+      if (node.children && node.children.length > 0) {
+        node.children = normalizeTree(node.children);
+      }
+      result.push(node);
+    }
+    return result;
+  }
+
+  // Save expanded folder paths to localStorage
+  function saveExpandedFolders() {
+    var paths = [];
+    document.querySelectorAll('.tree-item.expanded[data-tree-path]').forEach(function(el) {
+      paths.push(el.getAttribute('data-tree-path'));
+    });
+    localStorage.setItem('gcovr-expanded-folders', JSON.stringify(paths));
   }
 
   function renderTree(container, tree) {
@@ -2260,7 +2518,7 @@ a:hover {
     }
 
     tree.forEach(function(item) {
-      container.appendChild(createTreeItem(item));
+      container.appendChild(createTreeItem(item, ''));
     });
 
     // Auto-expand to current file and highlight it
@@ -2273,29 +2531,48 @@ a:hover {
 
     // Find the link matching current page
     var currentLink = container.querySelector('a[href="' + currentPage + '"]');
-    if (!currentLink) return;
 
-    // Mark as active
-    var treeItem = currentLink.closest('.tree-item');
-    if (treeItem) {
-      treeItem.classList.add('active');
-    }
-
-    // Expand all parent folders
-    var parent = currentLink.closest('.tree-children');
-    while (parent) {
-      var parentItem = parent.closest('.tree-item');
-      if (parentItem) {
-        parentItem.classList.add('expanded');
-        var toggle = parentItem.querySelector(':scope > .tree-item-header > .tree-folder-toggle');
-        if (toggle) toggle.textContent = '−';
-      }
-      parent = parentItem ? parentItem.parentElement.closest('.tree-children') : null;
-    }
-
-    // Scroll into view
     if (currentLink) {
-      currentLink.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      // Mark as active
+      var treeItem = currentLink.closest('.tree-item');
+      if (treeItem) {
+        treeItem.classList.add('active');
+      }
+
+      // Expand all parent folders
+      var parent = currentLink.closest('.tree-children');
+      while (parent) {
+        var parentItem = parent.closest('.tree-item');
+        if (parentItem) {
+          parentItem.classList.add('expanded');
+          var toggle = parentItem.querySelector(':scope > .tree-item-header > .tree-folder-toggle');
+          if (toggle) toggle.textContent = '−';
+        }
+        parent = parentItem ? parentItem.parentElement.closest('.tree-children') : null;
+      }
+    }
+
+    // Restore previously expanded folders from localStorage
+    try {
+      var saved = localStorage.getItem('gcovr-expanded-folders');
+      if (saved) {
+        var paths = JSON.parse(saved);
+        paths.forEach(function(path) {
+          var el = container.querySelector('.tree-item[data-tree-path="' + CSS.escape(path) + '"]');
+          if (el && !el.classList.contains('no-children')) {
+            el.classList.add('expanded');
+            var toggle = el.querySelector(':scope > .tree-item-header > .tree-folder-toggle');
+            if (toggle) toggle.textContent = '−';
+          }
+        });
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    // Scroll active item into view instantly
+    if (currentLink) {
+      currentLink.scrollIntoView({ block: 'center', behavior: 'instant' });
     }
   }
 
@@ -2320,12 +2597,15 @@ a:hover {
     return lastSlash >= 0 ? cleaned.substring(lastSlash + 1) : cleaned;
   }
 
-  function createTreeItem(item) {
+  function createTreeItem(item, parentPath) {
     var hasChildren = item.children && item.children.length > 0;
     var isDirectory = item.isDirectory || hasChildren;
+    var cleanedName = cleanPathName(item.name);
+    var treePath = parentPath ? (parentPath + '/' + cleanedName) : cleanedName;
 
     var div = document.createElement('div');
     div.className = 'tree-item' + (isDirectory ? ' is-folder' : '') + (hasChildren ? '' : ' no-children');
+    div.setAttribute('data-tree-path', treePath);
 
     var header = document.createElement('div');
     header.className = 'tree-item-header';
@@ -2342,17 +2622,19 @@ a:hover {
         e.preventDefault();
         var isExpanded = div.classList.toggle('expanded');
         toggle.textContent = isExpanded ? '−' : '+';
+        saveExpandedFolders();
       });
       header.appendChild(toggle);
 
       // Make entire header clickable to expand/collapse
       header.style.cursor = 'pointer';
       header.addEventListener('click', function(e) {
-        // Don't toggle if clicking a link
-        if (e.target.tagName === 'A') return;
+        // If clicking directly on a link, let it navigate
+        if (e.target.closest('a')) return;
         e.preventDefault();
         var isExpanded = div.classList.toggle('expanded');
         toggle.textContent = isExpanded ? '−' : '+';
+        saveExpandedFolders();
       });
     } else {
       var spacer = document.createElement('span');
@@ -2377,10 +2659,6 @@ a:hover {
     var tooltipText = cleanPathName(item.fullPath || item.name);
     var label = document.createElement('span');
     label.className = 'tree-label';
-    // Apply coverage class for coloring
-    if (item.coverageClass) {
-      label.classList.add(item.coverageClass);
-    }
     label.title = tooltipText;
     if (item.link) {
       var link = document.createElement('a');
@@ -2403,7 +2681,7 @@ a:hover {
       var childrenInner = document.createElement('div');
       childrenInner.className = 'tree-children-inner';
       item.children.forEach(function(child) {
-        childrenInner.appendChild(createTreeItem(child));
+        childrenInner.appendChild(createTreeItem(child, treePath));
       });
 
       childrenWrapper.appendChild(childrenInner);
@@ -2419,21 +2697,374 @@ a:hover {
 
   function initSearch() {
     const searchInput = document.getElementById('file-search');
-    if (!searchInput) return;
+    const fileTree = document.getElementById('file-tree');
+    const clearBtn = document.getElementById('search-clear');
+    const searchContainer = searchInput ? searchInput.closest('.sidebar-search') : null;
+    if (!searchInput || !fileTree) return;
 
+    // Store pre-search expanded state so we can restore it
+    var preSearchExpanded = null;
+
+    // Create no-results message
+    var noResults = document.createElement('div');
+    noResults.className = 'search-no-results';
+    noResults.textContent = 'No matching files';
+    noResults.style.display = 'none';
+    fileTree.appendChild(noResults);
+
+    function updateClearButton() {
+      if (searchContainer) {
+        searchContainer.classList.toggle('has-query', searchInput.value.trim() !== '');
+      }
+    }
+
+    // Clear button
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        sessionStorage.removeItem('gcovr-search');
+        updateClearButton();
+        performSearch('');
+        searchInput.focus();
+      });
+    }
+
+    var debounceTimer = null;
     searchInput.addEventListener('input', function() {
-      const query = this.value.toLowerCase().trim();
-      const treeItems = document.querySelectorAll('.tree-item');
+      updateClearButton();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function() {
+        var val = searchInput.value;
+        if (val.trim() !== '') {
+          sessionStorage.setItem('gcovr-search', val);
+        } else {
+          sessionStorage.removeItem('gcovr-search');
+        }
+        performSearch(val);
+      }, 150);
+    });
 
-      treeItems.forEach(function(item) {
-        const label = item.querySelector('.tree-label');
-        if (label) {
-          const text = label.textContent.toLowerCase();
-          const matches = query === '' || text.includes(query);
-          item.style.display = matches ? '' : 'none';
+    // Restore search state from sessionStorage on page load (synchronous
+    // since initFileTree has already built the tree before initSearch runs)
+    var savedSearch = sessionStorage.getItem('gcovr-search');
+    if (savedSearch) {
+      searchInput.value = savedSearch;
+      updateClearButton();
+      performSearch(savedSearch);
+    }
+
+    function performSearch(value) {
+      var query = value.toLowerCase().trim();
+      var allItems = fileTree.querySelectorAll('.tree-item');
+
+      // Clear all highlights
+      fileTree.querySelectorAll('.search-highlight').forEach(function(mark) {
+        var parent = mark.parentNode;
+        parent.replaceChild(document.createTextNode(mark.textContent), mark);
+        parent.normalize();
+      });
+
+      // If query is empty, restore original state
+      if (query === '') {
+        noResults.style.display = 'none';
+        allItems.forEach(function(item) {
+          item.style.display = '';
+          item.classList.remove('search-match');
+        });
+        // Restore pre-search expanded state
+        if (preSearchExpanded !== null) {
+          allItems.forEach(function(item) {
+            var path = item.getAttribute('data-tree-path');
+            var toggle = item.querySelector(':scope > .tree-item-header > .tree-folder-toggle');
+            if (toggle) {
+              if (preSearchExpanded.indexOf(path) >= 0) {
+                item.classList.add('expanded');
+                toggle.textContent = '\u2212';
+              } else {
+                item.classList.remove('expanded');
+                toggle.textContent = '+';
+              }
+            }
+          });
+          preSearchExpanded = null;
+        }
+        return;
+      }
+
+      // Save expanded state before first search
+      if (preSearchExpanded === null) {
+        preSearchExpanded = [];
+        allItems.forEach(function(item) {
+          if (item.classList.contains('expanded')) {
+            preSearchExpanded.push(item.getAttribute('data-tree-path'));
+          }
+        });
+      }
+
+      // Determine which items match (check full path and display name)
+      var matchSet = new Set();
+
+      allItems.forEach(function(item) {
+        var path = (item.getAttribute('data-tree-path') || '').toLowerCase();
+        var label = item.querySelector(':scope > .tree-item-header > .tree-label');
+        var text = label ? label.textContent.toLowerCase() : '';
+        if (path.includes(query) || text.includes(query)) {
+          matchSet.add(item);
+        }
+      });
+
+      // Also mark all ancestor items of matches as visible
+      var visibleSet = new Set(matchSet);
+      matchSet.forEach(function(item) {
+        var parent = item.parentElement;
+        while (parent && parent !== fileTree) {
+          if (parent.classList && parent.classList.contains('tree-item')) {
+            visibleSet.add(parent);
+          }
+          parent = parent.parentElement;
+        }
+      });
+
+      // Apply visibility, expand parents of matches, highlight text
+      var anyVisible = false;
+      allItems.forEach(function(item) {
+        var isVisible = visibleSet.has(item);
+        item.style.display = isVisible ? '' : 'none';
+        item.classList.toggle('search-match', matchSet.has(item));
+
+        if (isVisible) {
+          anyVisible = true;
+          // Auto-expand folders that contain matches
+          var toggle = item.querySelector(':scope > .tree-item-header > .tree-folder-toggle');
+          if (toggle && visibleSet.has(item) && !matchSet.has(item) || (toggle && matchSet.has(item) && item.classList.contains('is-folder'))) {
+            item.classList.add('expanded');
+            toggle.textContent = '\u2212';
+          }
+        }
+
+        // Highlight matched text in label
+        if (matchSet.has(item)) {
+          var label = item.querySelector(':scope > .tree-item-header > .tree-label');
+          if (label) {
+            highlightText(label, query);
+          }
+        }
+      });
+
+      noResults.style.display = anyVisible ? 'none' : '';
+    }
+
+    function highlightText(container, query) {
+      // Walk text nodes inside the label (may be inside an <a> tag)
+      var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+      var textNodes = [];
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+      textNodes.forEach(function(node) {
+        var text = node.textContent;
+        var lowerText = text.toLowerCase();
+        var idx = lowerText.indexOf(query);
+        if (idx === -1) return;
+
+        var frag = document.createDocumentFragment();
+        var lastIdx = 0;
+        while (idx !== -1) {
+          if (idx > lastIdx) {
+            frag.appendChild(document.createTextNode(text.substring(lastIdx, idx)));
+          }
+          var mark = document.createElement('mark');
+          mark.className = 'search-highlight';
+          mark.textContent = text.substring(idx, idx + query.length);
+          frag.appendChild(mark);
+          lastIdx = idx + query.length;
+          idx = lowerText.indexOf(query, lastIdx);
+        }
+        if (lastIdx < text.length) {
+          frag.appendChild(document.createTextNode(text.substring(lastIdx)));
+        }
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+  }
+
+  // ===========================================
+  // View Toggle (Folder / Flat)
+  // ===========================================
+
+  var viewToggleInitialized = false;
+
+  function initViewToggle() {
+    if (viewToggleInitialized) return;
+
+    var toggle = document.getElementById('view-toggle');
+    if (!toggle) return;
+
+    var fileList = document.getElementById('file-list');
+    var container = fileList ? fileList.closest('.file-list-container') : null;
+    if (!fileList || !container) return;
+
+    // Need tree data for flat view (prefer full uncollapsed tree)
+    var treeData = window.GCOVR_TREE_DATA_FULL || window.GCOVR_TREE_DATA;
+    if (!treeData) {
+      var flatBtn = toggle.querySelector('[data-view="flat"]');
+      if (flatBtn) {
+        flatBtn.disabled = true;
+        flatBtn.title = 'Flat view requires tree data';
+      }
+      return;
+    }
+
+    viewToggleInitialized = true;
+
+    var buttons = toggle.querySelectorAll('.view-toggle-btn');
+    var originalContent = fileList.innerHTML;
+    var currentView = 'folder';
+
+    // Recursively collect all file nodes with full paths
+    function flattenTree(nodes, parentPath) {
+      var files = [];
+      if (!nodes) return files;
+      for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        var cleanName = cleanPathName(node.name);
+        var nodePath = parentPath ? (parentPath + '/' + cleanName) : cleanName;
+        if (node.children && node.children.length > 0) {
+          files = files.concat(flattenTree(node.children, nodePath));
+        }
+        if (!node.isDirectory) {
+          files.push({
+            path: nodePath,
+            link: node.link,
+            coverage: node.coverage,
+            coverageClass: node.coverageClass || ''
+          });
+        }
+      }
+      return files;
+    }
+
+    function createFlatRow(file, hasFunctions, hasBranches) {
+      var div = document.createElement('div');
+      div.className = 'file-row file';
+      div.setAttribute('data-filename', file.path);
+      div.setAttribute('data-coverage', file.coverage || '0');
+      div.setAttribute('data-lines', '0');
+      div.setAttribute('data-functions', '0');
+      div.setAttribute('data-branches', '0');
+
+      // Name column
+      var colName = document.createElement('div');
+      colName.className = 'col-name';
+      var icon = document.createElement('span');
+      icon.className = 'file-icon';
+      icon.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M3.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 019 4.25V1.5H3.75zm6.75.062V4.25c0 .138.112.25.25.25h2.688a.252.252 0 00-.011-.013l-2.914-2.914a.272.272 0 00-.013-.011zM2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0113.25 16h-9.5A1.75 1.75 0 012 14.25V1.75z"></path></svg>';
+      colName.appendChild(icon);
+      if (file.link) {
+        var a = document.createElement('a');
+        a.href = file.link;
+        a.textContent = file.path;
+        a.title = file.path;
+        colName.appendChild(a);
+      } else {
+        var span = document.createElement('span');
+        span.className = 'no-link';
+        span.textContent = file.path;
+        span.title = file.path;
+        colName.appendChild(span);
+      }
+      div.appendChild(colName);
+
+      // Coverage column
+      var colCov = document.createElement('div');
+      colCov.className = 'col-coverage';
+      var barWrap = document.createElement('div');
+      barWrap.className = 'coverage-bar-container';
+      var bar = document.createElement('div');
+      bar.className = 'coverage-bar ' + file.coverageClass;
+      var pct = parseFloat(file.coverage) || 0;
+      bar.style.width = pct + '%';
+      barWrap.appendChild(bar);
+      colCov.appendChild(barWrap);
+      var pctSpan = document.createElement('span');
+      pctSpan.className = 'coverage-percent ' + file.coverageClass;
+      pctSpan.textContent = file.coverage ? (file.coverage + '%') : '-';
+      colCov.appendChild(pctSpan);
+      div.appendChild(colCov);
+
+      // Lines column
+      var colLines = document.createElement('div');
+      colLines.className = 'col-lines';
+      colLines.innerHTML = '<span class="stat-value">-</span>';
+      div.appendChild(colLines);
+
+      // Functions column
+      if (hasFunctions) {
+        var colFunc = document.createElement('div');
+        colFunc.className = 'col-functions';
+        colFunc.innerHTML = '<span class="stat-value">-</span>';
+        div.appendChild(colFunc);
+      }
+
+      // Branches column
+      if (hasBranches) {
+        var colBranch = document.createElement('div');
+        colBranch.className = 'col-branches';
+        colBranch.innerHTML = '<span class="stat-value">-</span>';
+        div.appendChild(colBranch);
+      }
+
+      return div;
+    }
+
+    function switchToFlat() {
+      currentView = 'flat';
+      var files = flattenTree(treeData, '');
+      files.sort(function(a, b) { return a.path.localeCompare(b.path); });
+
+      var hasFunctions = !container.classList.contains('no-functions');
+      var hasBranches = !container.classList.contains('no-branches');
+
+      fileList.innerHTML = '';
+      for (var i = 0; i < files.length; i++) {
+        fileList.appendChild(createFlatRow(files[i], hasFunctions, hasBranches));
+      }
+      container.classList.add('flat-view');
+    }
+
+    function switchToFolder() {
+      currentView = 'folder';
+      fileList.innerHTML = originalContent;
+      container.classList.remove('flat-view');
+      sortList('filename', true);
+    }
+
+    function setActiveButton(view) {
+      buttons.forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+    }
+
+    buttons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var view = this.dataset.view;
+        if (view === currentView) return;
+        setActiveButton(view);
+        localStorage.setItem('gcovr-view-mode', view);
+        if (view === 'flat') {
+          switchToFlat();
+        } else {
+          switchToFolder();
         }
       });
     });
+
+    // Restore saved preference
+    var savedView = localStorage.getItem('gcovr-view-mode');
+    if (savedView === 'flat') {
+      setActiveButton('flat');
+      switchToFlat();
+    }
   }
 
   // ===========================================
@@ -2545,7 +3176,7 @@ a:hover {
   <body>
     <div class="app-container">
       <!-- Sidebar -->
-      <aside class="sidebar" id="sidebar"><script>if(localStorage.getItem('sidebar-collapsed')==='true')document.currentScript.parentElement.classList.add('collapsed');</script>
+      <aside class="sidebar" id="sidebar"><script>if(localStorage.getItem('sidebar-collapsed')==='true'){document.currentScript.parentElement.classList.add('collapsed');}else{var sw=localStorage.getItem('gcovr-sidebar-width');if(sw)document.documentElement.style.setProperty('--sidebar-width',sw+'px');}</script>
         <div class="sidebar-header">
           <div class="sidebar-header-row">
             <a href="index.html" class="sidebar-logo" title="Back to index">
@@ -2558,11 +3189,11 @@ a:hover {
           </div>
           <div class="sidebar-title-group">
             <span class="sidebar-library">json</span>
-            <span class="sidebar-subtitle">GCC Code Coverage</span>
           </div>
         </div>
         <div class="sidebar-search">
           <input type="text" id="file-search" placeholder="Search files..." autocomplete="off">
+          <button class="search-clear" id="search-clear" type="button" aria-label="Clear search">&times;</button>
         </div>
         <div class="tree-controls">
           <button class="tree-control-btn" id="expand-all" title="Expand all">
@@ -2596,33 +3227,7 @@ a:hover {
   </div>
 </div>
         </nav>
-        <div class="sidebar-footer">
-          <div class="theme-selector" id="theme-selector">
-            <button class="theme-toggle" id="theme-toggle" title="Select theme">
-              <svg class="icon-system" viewBox="0 0 16 16" fill="currentColor"><path d="M0 4s0-2 2-2h12s2 0 2 2v6s0 2-2 2h-4c0 .667.083 1.167.25 1.5H11a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.75c.167-.333.25-.833.25-1.5H2s-2 0-2-2V4zm1.398-.855a.758.758 0 0 0-.254.302A1.46 1.46 0 0 0 1 4.01V10c0 .325.078.502.145.602.07.105.17.188.302.254a1.464 1.464 0 0 0 .538.143L2.01 11H14c.325 0 .502-.078.602-.145a.758.758 0 0 0 .254-.302 1.464 1.464 0 0 0 .143-.538L15 9.99V4c0-.325-.078-.502-.145-.602a.757.757 0 0 0-.302-.254A1.46 1.46 0 0 0 13.99 3H2c-.325 0-.502.078-.602.145z"/></svg>
-              <svg class="icon-moon" viewBox="0 0 16 16" fill="currentColor"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
-              <svg class="icon-sun" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
-              <span class="theme-label">System</span>
-            </button>
-            <div class="theme-menu" id="theme-menu">
-              <button class="theme-option" data-theme="system">
-                <svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 4s0-2 2-2h12s2 0 2 2v6s0 2-2 2h-4c0 .667.083 1.167.25 1.5H11a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.75c.167-.333.25-.833.25-1.5H2s-2 0-2-2V4zm1.398-.855a.758.758 0 0 0-.254.302A1.46 1.46 0 0 0 1 4.01V10c0 .325.078.502.145.602.07.105.17.188.302.254a1.464 1.464 0 0 0 .538.143L2.01 11H14c.325 0 .502-.078.602-.145a.758.758 0 0 0 .254-.302 1.464 1.464 0 0 0 .143-.538L15 9.99V4c0-.325-.078-.502-.145-.602a.757.757 0 0 0-.302-.254A1.46 1.46 0 0 0 13.99 3H2c-.325 0-.502.078-.602.145z"/></svg>
-                <span>System</span>
-                <svg class="check" viewBox="0 0 16 16" fill="currentColor"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
-              </button>
-              <button class="theme-option" data-theme="light">
-                <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
-                <span>Light</span>
-                <svg class="check" viewBox="0 0 16 16" fill="currentColor"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
-              </button>
-              <button class="theme-option" data-theme="dark">
-                <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
-                <span>Dark</span>
-                <svg class="check" viewBox="0 0 16 16" fill="currentColor"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
+        <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
       </aside>
 
       <!-- Mobile sidebar backdrop -->
@@ -2635,7 +3240,7 @@ a:hover {
             <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
           </button>
           <div class="breadcrumb">
-<a href="index.html">Root</a><span class="separator">/</span><span class="current">detail / charconv / detail / emulated128.hpp</span>          </div>
+<a href="index.html" class="breadcrumb-home">Index</a><span class="separator">/</span><span class="current">detail / charconv / detail / emulated128.hpp</span>          </div>
           <div class="header-actions">
 <div class="nav-links">
   <a class="nav-link nav-prev" href="index.compute_float64.hpp.14da4b5c079d398c9d8067d0d7a811dc.html" title="Previous file">
@@ -2652,6 +3257,10 @@ a:hover {
   </a>
 </div>
           </div>
+          <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 16 16" fill="currentColor"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
+          </button>
         </header>
 
         <div class="content-wrapper">
@@ -4250,11 +4859,11 @@ a:hover {
 
         <footer class="main-footer">
           Created using <a href="http://gcovr.com/en/8.6">GCOVR (Version 8.6)</a>
-          at 2026-02-03 14:30:58
+          at 2026-02-13 14:55:58
         </footer>
       </main>
     </div>
-  <script>window.GCOVR_TREE_DATA=[{"name": "detail", "coverage": "83.0", "coverageClass": "coverage-medium", "isDirectory": true, "link": "index.detail.0ab43ac414239956f09d5b0181f77c50.html", "children": [{"name": "charconv", "coverage": "52.9", "coverageClass": "coverage-low", "isDirectory": true, "link": "index.charconv.510f5dd29cc43eca58c0d2b93adff045.html", "children": [{"name": "detail", "coverage": "53.2", "coverageClass": "coverage-low", "isDirectory": true, "link": "index.detail.287b6ad9e303318f27f0e943b3878477.html", "children": [{"name": "fast_float", "coverage": "79.6", "coverageClass": "coverage-medium", "isDirectory": true, "link": "index.fast_float.eccdc16b8d3a6677c41246e350f1ee5c.html", "children": [{"name": "ascii_number.hpp", "coverage": "88.0", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.ascii_number.hpp.06e327eb6aa84eac97ab3143afde5536.html", "children": []}, {"name": "bigint.hpp", "coverage": "89.9", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.bigint.hpp.7ed59f082bdc8865c839e37a907818ae.html", "children": []}, {"name": "decimal_to_binary.hpp", "coverage": "94.7", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.decimal_to_binary.hpp.aa9ca29d0a37b3474618fa96dc2b5923.html", "children": []}, {"name": "digit_comparison.hpp", "coverage": "76.9", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.digit_comparison.hpp.d6697c5bee8735e93381acb1ede736e7.html", "children": []}, {"name": "float_common.hpp", "coverage": "62.7", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.float_common.hpp.60c7bd470abb6c3589089cc294f360d4.html", "children": []}, {"name": "parse_number.hpp", "coverage": "42.9", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.parse_number.hpp.7949b767450af0a0c4e38d459ab8efa6.html", "children": []}]}, {"name": "compute_float64.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.compute_float64.hpp.14da4b5c079d398c9d8067d0d7a811dc.html", "children": []}, {"name": "emulated128.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.emulated128.hpp.0ceaaed8d203e80b297f0b1456573326.html", "children": []}, {"name": "from_chars_float_impl.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.from_chars_float_impl.hpp.a4a922435f511d73baf7f630422a09ef.html", "children": []}, {"name": "from_chars_integer_impl.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.from_chars_integer_impl.hpp.62421e671be5feb9c0f1e3df5a09b86e.html", "children": []}, {"name": "integer_search_trees.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.integer_search_trees.hpp.4c04f6dbbc7f34b14ccd1b3f4b32318c.html", "children": []}, {"name": "parser.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.parser.hpp.45a498812670ba69036304cd17e3052d.html", "children": []}]}, {"name": "impl/from_chars.ipp", "coverage": "25.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.from_chars.ipp.1f79c0e3711fd7d708dc790de46627b3.html", "children": []}]}, {"name": "impl", "coverage": "99.3", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.impl.cde90127c1b0418ad9f796d3477a9914.html", "children": [{"name": "array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.ffb272ea2be09d8caf7e569420bf69e3.html", "children": []}, {"name": "default_resource.ipp", "coverage": "87.5", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.default_resource.ipp.29b0230184410f16ceaecef9a447dcef.html", "children": []}, {"name": "except.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.except.ipp.12c9aef5d4d66299103ac6024ed0063f.html", "children": []}, {"name": "format.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.format.ipp.9ec47a71b786a54db9e57825e82a5eb7.html", "children": []}, {"name": "handler.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.handler.ipp.25997a61b96794a78e1e3ddeede59723.html", "children": []}, {"name": "shared_resource.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.shared_resource.ipp.f07eb9144ccb01dab822bc01a22dda0d.html", "children": []}, {"name": "stack.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stack.hpp.c6cfbf398aba6b34d13f47ba0d19bf6a.html", "children": []}, {"name": "stack.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stack.ipp.3a9e0e01201646e2f48328d15e4e2602.html", "children": []}, {"name": "string_impl.ipp", "coverage": "99.1", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string_impl.ipp.e66f2c45d36b3fec9c3bfbb095fa9edb.html", "children": []}]}, {"name": "ryu", "coverage": "99.7", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.ryu.9a047557b83bbcb666051bf9b69b073a.html", "children": [{"name": "detail", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.detail.e4ef6da21b1421bbb8fd14958bc3b5ac.html", "children": [{"name": "common.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.common.hpp.98695bbba488db8061085c97a91bfff6.html", "children": []}, {"name": "d2s.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s.hpp.cde3922f605044959e8be4ef6db1abab.html", "children": []}, {"name": "d2s_full_table.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s_full_table.hpp.08b587354545c40cd025a0cdb25e60c9.html", "children": []}, {"name": "d2s_intrinsics.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s_intrinsics.hpp.83ef835088fb80240623093e946e5ee8.html", "children": []}, {"name": "digit_table.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.digit_table.hpp.54cb42fce758b96305314c836f5822d5.html", "children": []}]}, {"name": "impl/d2s.ipp", "coverage": "99.6", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s.ipp.5c6823db6d8cdf35aa2e1efe1dbd8e24.html", "children": []}]}, {"name": "array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.161c04ed0fb44652959476d632ffe1a5.html", "children": []}, {"name": "buffer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.buffer.hpp.55b2280adf5814131719bffc56d99e63.html", "children": []}, {"name": "config.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.config.hpp.0a32ee1b4391ae1eeb404af25739161a.html", "children": []}, {"name": "default_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.default_resource.hpp.cf498b84410e67aa58bd4c613cab1f84.html", "children": []}, {"name": "digest.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.digest.hpp.905cd2165a4f34376c449f885fe1adf1.html", "children": []}, {"name": "literals.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.literals.hpp.2e722ac7a80e95232217c08e5473907a.html", "children": []}, {"name": "object.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.hpp.f7e5cc97accf7f1302ce80ea402b6373.html", "children": []}, {"name": "parse_into.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parse_into.hpp.f1e9fbffabe35587d223b9d98d9e761c.html", "children": []}, {"name": "sbo_buffer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.sbo_buffer.hpp.9e08251ec0ed54496b3a8a6fb89a63c3.html", "children": []}, {"name": "shared_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.shared_resource.hpp.1927ca08c89a37cdfbf293076af47ff7.html", "children": []}, {"name": "sse2.hpp", "coverage": "97.8", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.sse2.hpp.6a507d81ac7c10f52d533f58d85ac238.html", "children": []}, {"name": "stack.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stack.hpp.2c1d90a4d04ade6bea988474789a22e6.html", "children": []}, {"name": "stream.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stream.hpp.07654afdcb5f383c2335d7fecd03055c.html", "children": []}, {"name": "string_impl.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string_impl.hpp.3bd773ee5e5571ae1ed6db73d00280e3.html", "children": []}, {"name": "utf8.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.utf8.hpp.d18a20eb6345bd7b0b78784fd246f3ed.html", "children": []}, {"name": "value.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.hpp.08b63e532c8156eaeb5cccaa7944e074.html", "children": []}, {"name": "value_from.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_from.hpp.1cdcc419fa9e4a63453aa84ed54ca11f.html", "children": []}, {"name": "value_to.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_to.hpp.635e555e887031c6fc380bccf2c402de.html", "children": []}]}, {"name": "impl", "coverage": "99.2", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.impl.c82c9a65c0038782a53ba4c76e95a641.html", "children": [{"name": "array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.43ca8a64d5cb1e0e18bac819d8dd589d.html", "children": []}, {"name": "array.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.ipp.12b73a50f89b12e61f6c515c936b6c51.html", "children": []}, {"name": "conversion.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.conversion.hpp.c385894883668d872f8d1b74220b0f7e.html", "children": []}, {"name": "error.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.error.hpp.561447e3b80e5107d88e9cf24f3b9513.html", "children": []}, {"name": "error.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.error.ipp.5ffd5dbb81ff10cef7db2ed5dff0c794.html", "children": []}, {"name": "kind.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.kind.ipp.944bac86090b83665f00c8cee1a3defe.html", "children": []}, {"name": "monotonic_resource.ipp", "coverage": "97.1", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.monotonic_resource.ipp.05f2ed6d69820a792f84fc5a30acb7c6.html", "children": []}, {"name": "null_resource.ipp", "coverage": "77.8", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.null_resource.ipp.a960c79e90c931af68e459ac2d12d5fe.html", "children": []}, {"name": "object.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.hpp.f9faeb03c62042d95f8ee35052afa9e9.html", "children": []}, {"name": "object.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.ipp.84c492a53a4bbdeb0fd1338b41d399a5.html", "children": []}, {"name": "parse.ipp", "coverage": "96.1", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parse.ipp.bda6280a016bf6834766bc3a0bff32bc.html", "children": []}, {"name": "parse_into.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parse_into.hpp.9fe27b0246ac36c90c713d2ffcd261fd.html", "children": []}, {"name": "parser.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parser.ipp.266f2bed4bd28788f0addeb11aa58a0d.html", "children": []}, {"name": "pointer.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.pointer.ipp.29ac44758c62ce39e625bbc7f1409991.html", "children": []}, {"name": "serialize.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serialize.hpp.d3414f2b51c87c80044a72e36bd57115.html", "children": []}, {"name": "serialize.ipp", "coverage": "96.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serialize.ipp.01c963125bda877c839757dd2c6962c0.html", "children": []}, {"name": "serializer.hpp", "coverage": "97.8", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serializer.hpp.ad86b38709508f8d05ea641d2e98c1da.html", "children": []}, {"name": "serializer.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serializer.ipp.a6e01f5c62a1e98844cee0136d1d1512.html", "children": []}, {"name": "static_resource.ipp", "coverage": "81.8", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.static_resource.ipp.da4918eee73bb2b38d71ee2c22c5a4b6.html", "children": []}, {"name": "stream_parser.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stream_parser.ipp.9e84d7cb15fc2f2f5eb0a5dbb07fed15.html", "children": []}, {"name": "string.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string.hpp.753c5fbae83abdbca988b8d9bf6c7e2c.html", "children": []}, {"name": "string.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string.ipp.608f1816a0e4c09495ec66dab6eb9085.html", "children": []}, {"name": "value.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.hpp.927a100eb53bf40397be1d8b22da1871.html", "children": []}, {"name": "value.ipp", "coverage": "98.7", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.ipp.210aedf137631846f16fbe0ee4f0812c.html", "children": []}, {"name": "value_ref.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_ref.hpp.9e9582fd1af4a003bf535e71a0b7904d.html", "children": []}, {"name": "value_ref.ipp", "coverage": "96.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_ref.ipp.e9a0bd8aab92a2b5ab364bf6b69e3959.html", "children": []}, {"name": "value_stack.ipp", "coverage": "99.5", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_stack.ipp.898987b601e2219cdbbc0139ef61766f.html", "children": []}, {"name": "visit.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.visit.hpp.d5ce1db1e3454de3538149bf6f28b617.html", "children": []}]}, {"name": "array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.6e0bda7bf6757e548b5faad83e899291.html", "children": []}, {"name": "basic_parser.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.basic_parser.hpp.c9c83104d1acc54b93b6e51f63102df2.html", "children": []}, {"name": "basic_parser_impl.hpp", "coverage": "98.3", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.basic_parser_impl.hpp.5c3e10cbda02afe7ee8dcae02239f852.html", "children": []}, {"name": "monotonic_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.monotonic_resource.hpp.c7901c306f139d49bdd39970ea9decfb.html", "children": []}, {"name": "object.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.hpp.4af583e26a117226f5f096905dacf35c.html", "children": []}, {"name": "parser.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parser.hpp.d91835266758ed9bedb91a3636a5e82c.html", "children": []}, {"name": "pilfer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.pilfer.hpp.4dd6b487af20fd66fc07f525c990eb8b.html", "children": []}, {"name": "result_for.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.result_for.hpp.e956a435ea4d78939339c698f7ed6545.html", "children": []}, {"name": "serializer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serializer.hpp.79c79ec35822453ea6370e04c673a001.html", "children": []}, {"name": "static_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.static_resource.hpp.7bee809dfe2a5a1cb7dd0c3dd2654987.html", "children": []}, {"name": "storage_ptr.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.storage_ptr.hpp.ac80baa46fb5bebc8f455223b00c44c4.html", "children": []}, {"name": "stream_parser.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stream_parser.hpp.756a2056175378bf4974ad36f699d9ba.html", "children": []}, {"name": "string.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string.hpp.a0ee7b78a1e1a48649112e27bc32c7ed.html", "children": []}, {"name": "value.hpp", "coverage": "98.9", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.hpp.4e464561aa627034092b7a363639d5b7.html", "children": []}, {"name": "value_from.hpp", "coverage": "92.3", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_from.hpp.a24a88c1f8fcc581db892ed3062c98a8.html", "children": []}, {"name": "value_ref.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_ref.hpp.5136da43247c9084cc2a038477b40231.html", "children": []}, {"name": "value_to.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_to.hpp.1b7ce679b2c4b444ce7bf9f62953b6be.html", "children": []}];</script>
+  <script>window.GCOVR_TREE_DATA=[{"name": "detail", "coverage": "83.0", "coverageClass": "coverage-medium", "isDirectory": true, "link": "index.detail.0ab43ac414239956f09d5b0181f77c50.html", "children": [{"name": "../../../../detail/charconv", "coverage": "52.9", "coverageClass": "coverage-low", "isDirectory": true, "link": "index.charconv.510f5dd29cc43eca58c0d2b93adff045.html", "children": [{"name": "../../../../../detail/charconv/detail", "coverage": "53.2", "coverageClass": "coverage-low", "isDirectory": true, "link": "index.detail.287b6ad9e303318f27f0e943b3878477.html", "children": [{"name": "../../../../../../detail/charconv/detail/fast_float", "coverage": "79.6", "coverageClass": "coverage-medium", "isDirectory": true, "link": "index.fast_float.eccdc16b8d3a6677c41246e350f1ee5c.html", "children": [{"name": "../../../../../../../detail/charconv/detail/fast_float/ascii_number.hpp", "coverage": "88.0", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.ascii_number.hpp.06e327eb6aa84eac97ab3143afde5536.html", "children": []}, {"name": "../../../../../../../detail/charconv/detail/fast_float/bigint.hpp", "coverage": "89.9", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.bigint.hpp.7ed59f082bdc8865c839e37a907818ae.html", "children": []}, {"name": "../../../../../../../detail/charconv/detail/fast_float/decimal_to_binary.hpp", "coverage": "94.7", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.decimal_to_binary.hpp.aa9ca29d0a37b3474618fa96dc2b5923.html", "children": []}, {"name": "../../../../../../../detail/charconv/detail/fast_float/digit_comparison.hpp", "coverage": "76.9", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.digit_comparison.hpp.d6697c5bee8735e93381acb1ede736e7.html", "children": []}, {"name": "../../../../../../../detail/charconv/detail/fast_float/float_common.hpp", "coverage": "62.7", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.float_common.hpp.60c7bd470abb6c3589089cc294f360d4.html", "children": []}, {"name": "../../../../../../../detail/charconv/detail/fast_float/parse_number.hpp", "coverage": "42.9", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.parse_number.hpp.7949b767450af0a0c4e38d459ab8efa6.html", "children": []}]}, {"name": "../../../../../../detail/charconv/detail/compute_float64.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.compute_float64.hpp.14da4b5c079d398c9d8067d0d7a811dc.html", "children": []}, {"name": "../../../../../../detail/charconv/detail/emulated128.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.emulated128.hpp.0ceaaed8d203e80b297f0b1456573326.html", "children": []}, {"name": "../../../../../../detail/charconv/detail/from_chars_float_impl.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.from_chars_float_impl.hpp.a4a922435f511d73baf7f630422a09ef.html", "children": []}, {"name": "../../../../../../detail/charconv/detail/from_chars_integer_impl.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.from_chars_integer_impl.hpp.62421e671be5feb9c0f1e3df5a09b86e.html", "children": []}, {"name": "../../../../../../detail/charconv/detail/integer_search_trees.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.integer_search_trees.hpp.4c04f6dbbc7f34b14ccd1b3f4b32318c.html", "children": []}, {"name": "../../../../../../detail/charconv/detail/parser.hpp", "coverage": "0.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.parser.hpp.45a498812670ba69036304cd17e3052d.html", "children": []}]}, {"name": "../../../../../detail/charconv/impl/from_chars.ipp", "coverage": "25.0", "coverageClass": "coverage-low", "isDirectory": false, "link": "index.from_chars.ipp.1f79c0e3711fd7d708dc790de46627b3.html", "children": []}]}, {"name": "../../../../detail/impl", "coverage": "99.3", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.impl.cde90127c1b0418ad9f796d3477a9914.html", "children": [{"name": "../../../../../detail/impl/array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.ffb272ea2be09d8caf7e569420bf69e3.html", "children": []}, {"name": "../../../../../detail/impl/default_resource.ipp", "coverage": "87.5", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.default_resource.ipp.29b0230184410f16ceaecef9a447dcef.html", "children": []}, {"name": "../../../../../detail/impl/except.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.except.ipp.12c9aef5d4d66299103ac6024ed0063f.html", "children": []}, {"name": "../../../../../detail/impl/format.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.format.ipp.9ec47a71b786a54db9e57825e82a5eb7.html", "children": []}, {"name": "../../../../../detail/impl/handler.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.handler.ipp.25997a61b96794a78e1e3ddeede59723.html", "children": []}, {"name": "../../../../../detail/impl/shared_resource.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.shared_resource.ipp.f07eb9144ccb01dab822bc01a22dda0d.html", "children": []}, {"name": "../../../../../detail/impl/stack.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stack.hpp.c6cfbf398aba6b34d13f47ba0d19bf6a.html", "children": []}, {"name": "../../../../../detail/impl/stack.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stack.ipp.3a9e0e01201646e2f48328d15e4e2602.html", "children": []}, {"name": "../../../../../detail/impl/string_impl.ipp", "coverage": "99.1", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string_impl.ipp.e66f2c45d36b3fec9c3bfbb095fa9edb.html", "children": []}]}, {"name": "../../../../detail/ryu", "coverage": "99.7", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.ryu.9a047557b83bbcb666051bf9b69b073a.html", "children": [{"name": "../../../../../detail/ryu/detail", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.detail.e4ef6da21b1421bbb8fd14958bc3b5ac.html", "children": [{"name": "../../../../../../detail/ryu/detail/common.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.common.hpp.98695bbba488db8061085c97a91bfff6.html", "children": []}, {"name": "../../../../../../detail/ryu/detail/d2s.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s.hpp.cde3922f605044959e8be4ef6db1abab.html", "children": []}, {"name": "../../../../../../detail/ryu/detail/d2s_full_table.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s_full_table.hpp.08b587354545c40cd025a0cdb25e60c9.html", "children": []}, {"name": "../../../../../../detail/ryu/detail/d2s_intrinsics.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s_intrinsics.hpp.83ef835088fb80240623093e946e5ee8.html", "children": []}, {"name": "../../../../../../detail/ryu/detail/digit_table.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.digit_table.hpp.54cb42fce758b96305314c836f5822d5.html", "children": []}]}, {"name": "../../../../../detail/ryu/impl/d2s.ipp", "coverage": "99.6", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.d2s.ipp.5c6823db6d8cdf35aa2e1efe1dbd8e24.html", "children": []}]}, {"name": "../../../../detail/array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.161c04ed0fb44652959476d632ffe1a5.html", "children": []}, {"name": "../../../../detail/buffer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.buffer.hpp.55b2280adf5814131719bffc56d99e63.html", "children": []}, {"name": "../../../../detail/config.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.config.hpp.0a32ee1b4391ae1eeb404af25739161a.html", "children": []}, {"name": "../../../../detail/default_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.default_resource.hpp.cf498b84410e67aa58bd4c613cab1f84.html", "children": []}, {"name": "../../../../detail/digest.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.digest.hpp.905cd2165a4f34376c449f885fe1adf1.html", "children": []}, {"name": "../../../../detail/literals.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.literals.hpp.2e722ac7a80e95232217c08e5473907a.html", "children": []}, {"name": "../../../../detail/object.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.hpp.f7e5cc97accf7f1302ce80ea402b6373.html", "children": []}, {"name": "../../../../detail/parse_into.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parse_into.hpp.f1e9fbffabe35587d223b9d98d9e761c.html", "children": []}, {"name": "../../../../detail/sbo_buffer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.sbo_buffer.hpp.9e08251ec0ed54496b3a8a6fb89a63c3.html", "children": []}, {"name": "../../../../detail/shared_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.shared_resource.hpp.1927ca08c89a37cdfbf293076af47ff7.html", "children": []}, {"name": "../../../../detail/sse2.hpp", "coverage": "97.8", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.sse2.hpp.6a507d81ac7c10f52d533f58d85ac238.html", "children": []}, {"name": "../../../../detail/stack.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stack.hpp.2c1d90a4d04ade6bea988474789a22e6.html", "children": []}, {"name": "../../../../detail/stream.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stream.hpp.07654afdcb5f383c2335d7fecd03055c.html", "children": []}, {"name": "../../../../detail/string_impl.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string_impl.hpp.3bd773ee5e5571ae1ed6db73d00280e3.html", "children": []}, {"name": "../../../../detail/utf8.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.utf8.hpp.d18a20eb6345bd7b0b78784fd246f3ed.html", "children": []}, {"name": "../../../../detail/value.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.hpp.08b63e532c8156eaeb5cccaa7944e074.html", "children": []}, {"name": "../../../../detail/value_from.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_from.hpp.1cdcc419fa9e4a63453aa84ed54ca11f.html", "children": []}, {"name": "../../../../detail/value_to.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_to.hpp.635e555e887031c6fc380bccf2c402de.html", "children": []}]}, {"name": "impl", "coverage": "99.2", "coverageClass": "coverage-high", "isDirectory": true, "link": "index.impl.c82c9a65c0038782a53ba4c76e95a641.html", "children": [{"name": "../../../../impl/array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.43ca8a64d5cb1e0e18bac819d8dd589d.html", "children": []}, {"name": "../../../../impl/array.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.ipp.12b73a50f89b12e61f6c515c936b6c51.html", "children": []}, {"name": "../../../../impl/conversion.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.conversion.hpp.c385894883668d872f8d1b74220b0f7e.html", "children": []}, {"name": "../../../../impl/error.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.error.hpp.561447e3b80e5107d88e9cf24f3b9513.html", "children": []}, {"name": "../../../../impl/error.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.error.ipp.5ffd5dbb81ff10cef7db2ed5dff0c794.html", "children": []}, {"name": "../../../../impl/kind.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.kind.ipp.944bac86090b83665f00c8cee1a3defe.html", "children": []}, {"name": "../../../../impl/monotonic_resource.ipp", "coverage": "97.1", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.monotonic_resource.ipp.05f2ed6d69820a792f84fc5a30acb7c6.html", "children": []}, {"name": "../../../../impl/null_resource.ipp", "coverage": "77.8", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.null_resource.ipp.a960c79e90c931af68e459ac2d12d5fe.html", "children": []}, {"name": "../../../../impl/object.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.hpp.f9faeb03c62042d95f8ee35052afa9e9.html", "children": []}, {"name": "../../../../impl/object.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.ipp.84c492a53a4bbdeb0fd1338b41d399a5.html", "children": []}, {"name": "../../../../impl/parse.ipp", "coverage": "96.1", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parse.ipp.bda6280a016bf6834766bc3a0bff32bc.html", "children": []}, {"name": "../../../../impl/parse_into.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parse_into.hpp.9fe27b0246ac36c90c713d2ffcd261fd.html", "children": []}, {"name": "../../../../impl/parser.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parser.ipp.266f2bed4bd28788f0addeb11aa58a0d.html", "children": []}, {"name": "../../../../impl/pointer.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.pointer.ipp.29ac44758c62ce39e625bbc7f1409991.html", "children": []}, {"name": "../../../../impl/serialize.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serialize.hpp.d3414f2b51c87c80044a72e36bd57115.html", "children": []}, {"name": "../../../../impl/serialize.ipp", "coverage": "96.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serialize.ipp.01c963125bda877c839757dd2c6962c0.html", "children": []}, {"name": "../../../../impl/serializer.hpp", "coverage": "97.8", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serializer.hpp.ad86b38709508f8d05ea641d2e98c1da.html", "children": []}, {"name": "../../../../impl/serializer.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serializer.ipp.a6e01f5c62a1e98844cee0136d1d1512.html", "children": []}, {"name": "../../../../impl/static_resource.ipp", "coverage": "81.8", "coverageClass": "coverage-medium", "isDirectory": false, "link": "index.static_resource.ipp.da4918eee73bb2b38d71ee2c22c5a4b6.html", "children": []}, {"name": "../../../../impl/stream_parser.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stream_parser.ipp.9e84d7cb15fc2f2f5eb0a5dbb07fed15.html", "children": []}, {"name": "../../../../impl/string.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string.hpp.753c5fbae83abdbca988b8d9bf6c7e2c.html", "children": []}, {"name": "../../../../impl/string.ipp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string.ipp.608f1816a0e4c09495ec66dab6eb9085.html", "children": []}, {"name": "../../../../impl/value.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.hpp.927a100eb53bf40397be1d8b22da1871.html", "children": []}, {"name": "../../../../impl/value.ipp", "coverage": "98.7", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.ipp.210aedf137631846f16fbe0ee4f0812c.html", "children": []}, {"name": "../../../../impl/value_ref.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_ref.hpp.9e9582fd1af4a003bf535e71a0b7904d.html", "children": []}, {"name": "../../../../impl/value_ref.ipp", "coverage": "96.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_ref.ipp.e9a0bd8aab92a2b5ab364bf6b69e3959.html", "children": []}, {"name": "../../../../impl/value_stack.ipp", "coverage": "99.5", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_stack.ipp.898987b601e2219cdbbc0139ef61766f.html", "children": []}, {"name": "../../../../impl/visit.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.visit.hpp.d5ce1db1e3454de3538149bf6f28b617.html", "children": []}]}, {"name": "array.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.array.hpp.6e0bda7bf6757e548b5faad83e899291.html", "children": []}, {"name": "basic_parser.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.basic_parser.hpp.c9c83104d1acc54b93b6e51f63102df2.html", "children": []}, {"name": "basic_parser_impl.hpp", "coverage": "98.3", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.basic_parser_impl.hpp.5c3e10cbda02afe7ee8dcae02239f852.html", "children": []}, {"name": "monotonic_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.monotonic_resource.hpp.c7901c306f139d49bdd39970ea9decfb.html", "children": []}, {"name": "object.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.object.hpp.4af583e26a117226f5f096905dacf35c.html", "children": []}, {"name": "parser.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.parser.hpp.d91835266758ed9bedb91a3636a5e82c.html", "children": []}, {"name": "pilfer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.pilfer.hpp.4dd6b487af20fd66fc07f525c990eb8b.html", "children": []}, {"name": "result_for.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.result_for.hpp.e956a435ea4d78939339c698f7ed6545.html", "children": []}, {"name": "serializer.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.serializer.hpp.79c79ec35822453ea6370e04c673a001.html", "children": []}, {"name": "static_resource.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.static_resource.hpp.7bee809dfe2a5a1cb7dd0c3dd2654987.html", "children": []}, {"name": "storage_ptr.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.storage_ptr.hpp.ac80baa46fb5bebc8f455223b00c44c4.html", "children": []}, {"name": "stream_parser.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.stream_parser.hpp.756a2056175378bf4974ad36f699d9ba.html", "children": []}, {"name": "string.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.string.hpp.a0ee7b78a1e1a48649112e27bc32c7ed.html", "children": []}, {"name": "value.hpp", "coverage": "98.9", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value.hpp.4e464561aa627034092b7a363639d5b7.html", "children": []}, {"name": "value_from.hpp", "coverage": "92.3", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_from.hpp.a24a88c1f8fcc581db892ed3062c98a8.html", "children": []}, {"name": "value_ref.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_ref.hpp.5136da43247c9084cc2a038477b40231.html", "children": []}, {"name": "value_to.hpp", "coverage": "100.0", "coverageClass": "coverage-high", "isDirectory": false, "link": "index.value_to.hpp.1b7ce679b2c4b444ce7bf9f62953b6be.html", "children": []}];</script>
 </body>
 
 </html>
