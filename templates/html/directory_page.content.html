@@ -3,6 +3,18 @@
 {% set has_functions = entries | selectattr('functions.coverage', 'ne', '-') | list | length > 0 %}
 {% set has_branches = entries | selectattr('branches.coverage', 'ne', '-') | list | length > 0 %}
 <div class="file-list-container{% if not has_functions %} no-functions{% endif %}{% if not has_branches %} no-branches{% endif %}">
+  <div class="file-list-toolbar">
+    <div class="view-toggle" id="view-toggle">
+      <button class="view-toggle-btn active" data-view="folder" title="Show files by folder">
+        <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3H7.5a.25.25 0 01-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75z"/></svg>
+        Folders
+      </button>
+      <button class="view-toggle-btn" data-view="flat" title="Show all files in a flat list">
+        <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3 2.5a.5.5 0 01.5-.5h9a.5.5 0 010 1h-9a.5.5 0 01-.5-.5zm0 3.5a.5.5 0 01.5-.5h9a.5.5 0 010 1h-9A.5.5 0 013 6zm0 3.5a.5.5 0 01.5-.5h9a.5.5 0 010 1h-9a.5.5 0 01-.5-.5zm0 3.5a.5.5 0 01.5-.5h9a.5.5 0 010 1h-9a.5.5 0 01-.5-.5z"/></svg>
+        Flat
+      </button>
+    </div>
+  </div>
   <div class="file-list-header">
     <div class="col-name sortable{% if info.sort_by == 'filename' %} {{info.sorted}}{% endif %}" data-sort="filename">
       Name

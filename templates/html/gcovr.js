@@ -13,6 +13,7 @@
     initBreadcrumbs();
     initSearch();
     initSorting();
+    initViewToggle();
     initToggleButtons();
     initTreeControls();
 
@@ -392,6 +393,8 @@
     if (window.GCOVR_TREE_DATA) {
       window.GCOVR_TREE_DATA = normalizeTree(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
+      // Save full tree before collapsing for flat view (preserves intermediate dirs)
+      window.GCOVR_TREE_DATA_FULL = JSON.parse(JSON.stringify(window.GCOVR_TREE_DATA));
       collapseSingleChildDirs(window.GCOVR_TREE_DATA);
       deduplicateTree(window.GCOVR_TREE_DATA);
       renderTree(treeContainer, window.GCOVR_TREE_DATA);
@@ -407,12 +410,14 @@
       .then(function(tree) {
         window.GCOVR_TREE_DATA = normalizeTree(tree);
         deduplicateTree(window.GCOVR_TREE_DATA);
+        window.GCOVR_TREE_DATA_FULL = JSON.parse(JSON.stringify(window.GCOVR_TREE_DATA));
         collapseSingleChildDirs(window.GCOVR_TREE_DATA);
         deduplicateTree(window.GCOVR_TREE_DATA);
         renderTree(treeContainer, window.GCOVR_TREE_DATA);
-        // Re-run breadcrumbs and search now that the tree exists
+        // Re-run breadcrumbs, search, and view toggle now that the tree exists
         initBreadcrumbs();
         initSearch();
+        initViewToggle();
       })
       .catch(function(err) {
         console.log('tree.json not found, using static sidebar');
@@ -916,6 +921,185 @@
         }
         node.parentNode.replaceChild(frag, node);
       });
+    }
+  }
+
+  // ===========================================
+  // View Toggle (Folder / Flat)
+  // ===========================================
+
+  var viewToggleInitialized = false;
+
+  function initViewToggle() {
+    if (viewToggleInitialized) return;
+
+    var toggle = document.getElementById('view-toggle');
+    if (!toggle) return;
+
+    var fileList = document.getElementById('file-list');
+    var container = fileList ? fileList.closest('.file-list-container') : null;
+    if (!fileList || !container) return;
+
+    // Need tree data for flat view (prefer full uncollapsed tree)
+    var treeData = window.GCOVR_TREE_DATA_FULL || window.GCOVR_TREE_DATA;
+    if (!treeData) {
+      var flatBtn = toggle.querySelector('[data-view="flat"]');
+      if (flatBtn) {
+        flatBtn.disabled = true;
+        flatBtn.title = 'Flat view requires tree data';
+      }
+      return;
+    }
+
+    viewToggleInitialized = true;
+
+    var buttons = toggle.querySelectorAll('.view-toggle-btn');
+    var originalContent = fileList.innerHTML;
+    var currentView = 'folder';
+
+    // Recursively collect all file nodes with full paths
+    function flattenTree(nodes, parentPath) {
+      var files = [];
+      if (!nodes) return files;
+      for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        var cleanName = cleanPathName(node.name);
+        var nodePath = parentPath ? (parentPath + '/' + cleanName) : cleanName;
+        if (node.children && node.children.length > 0) {
+          files = files.concat(flattenTree(node.children, nodePath));
+        }
+        if (!node.isDirectory) {
+          files.push({
+            path: nodePath,
+            link: node.link,
+            coverage: node.coverage,
+            coverageClass: node.coverageClass || ''
+          });
+        }
+      }
+      return files;
+    }
+
+    function createFlatRow(file, hasFunctions, hasBranches) {
+      var div = document.createElement('div');
+      div.className = 'file-row file';
+      div.setAttribute('data-filename', file.path);
+      div.setAttribute('data-coverage', file.coverage || '0');
+      div.setAttribute('data-lines', '0');
+      div.setAttribute('data-functions', '0');
+      div.setAttribute('data-branches', '0');
+
+      // Name column
+      var colName = document.createElement('div');
+      colName.className = 'col-name';
+      var icon = document.createElement('span');
+      icon.className = 'file-icon';
+      icon.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M3.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 019 4.25V1.5H3.75zm6.75.062V4.25c0 .138.112.25.25.25h2.688a.252.252 0 00-.011-.013l-2.914-2.914a.272.272 0 00-.013-.011zM2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0113.25 16h-9.5A1.75 1.75 0 012 14.25V1.75z"></path></svg>';
+      colName.appendChild(icon);
+      if (file.link) {
+        var a = document.createElement('a');
+        a.href = file.link;
+        a.textContent = file.path;
+        a.title = file.path;
+        colName.appendChild(a);
+      } else {
+        var span = document.createElement('span');
+        span.className = 'no-link';
+        span.textContent = file.path;
+        span.title = file.path;
+        colName.appendChild(span);
+      }
+      div.appendChild(colName);
+
+      // Coverage column
+      var colCov = document.createElement('div');
+      colCov.className = 'col-coverage';
+      var barWrap = document.createElement('div');
+      barWrap.className = 'coverage-bar-container';
+      var bar = document.createElement('div');
+      bar.className = 'coverage-bar ' + file.coverageClass;
+      var pct = parseFloat(file.coverage) || 0;
+      bar.style.width = pct + '%';
+      barWrap.appendChild(bar);
+      colCov.appendChild(barWrap);
+      var pctSpan = document.createElement('span');
+      pctSpan.className = 'coverage-percent ' + file.coverageClass;
+      pctSpan.textContent = file.coverage ? (file.coverage + '%') : '-';
+      colCov.appendChild(pctSpan);
+      div.appendChild(colCov);
+
+      // Lines column
+      var colLines = document.createElement('div');
+      colLines.className = 'col-lines';
+      colLines.innerHTML = '<span class="stat-value">-</span>';
+      div.appendChild(colLines);
+
+      // Functions column
+      if (hasFunctions) {
+        var colFunc = document.createElement('div');
+        colFunc.className = 'col-functions';
+        colFunc.innerHTML = '<span class="stat-value">-</span>';
+        div.appendChild(colFunc);
+      }
+
+      // Branches column
+      if (hasBranches) {
+        var colBranch = document.createElement('div');
+        colBranch.className = 'col-branches';
+        colBranch.innerHTML = '<span class="stat-value">-</span>';
+        div.appendChild(colBranch);
+      }
+
+      return div;
+    }
+
+    function switchToFlat() {
+      currentView = 'flat';
+      var files = flattenTree(treeData, '');
+      files.sort(function(a, b) { return a.path.localeCompare(b.path); });
+
+      var hasFunctions = !container.classList.contains('no-functions');
+      var hasBranches = !container.classList.contains('no-branches');
+
+      fileList.innerHTML = '';
+      for (var i = 0; i < files.length; i++) {
+        fileList.appendChild(createFlatRow(files[i], hasFunctions, hasBranches));
+      }
+      container.classList.add('flat-view');
+    }
+
+    function switchToFolder() {
+      currentView = 'folder';
+      fileList.innerHTML = originalContent;
+      container.classList.remove('flat-view');
+      sortList('filename', true);
+    }
+
+    function setActiveButton(view) {
+      buttons.forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+    }
+
+    buttons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var view = this.dataset.view;
+        if (view === currentView) return;
+        setActiveButton(view);
+        localStorage.setItem('gcovr-view-mode', view);
+        if (view === 'flat') {
+          switchToFlat();
+        } else {
+          switchToFolder();
+        }
+      });
+    });
+
+    // Restore saved preference
+    var savedView = localStorage.getItem('gcovr-view-mode');
+    if (savedView === 'flat') {
+      setActiveButton('flat');
+      switchToFlat();
     }
   }
 
