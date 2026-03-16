@@ -1765,7 +1765,13 @@ body.sidebar-resizing .main-content {
   }
 
   .file-list-header,
-  .file-row {
+  .file-row,
+  .no-functions.no-branches .file-list-header,
+  .no-functions.no-branches .file-row,
+  .no-functions:not(.no-branches) .file-list-header,
+  .no-functions:not(.no-branches) .file-row,
+  .no-branches:not(.no-functions) .file-list-header,
+  .no-branches:not(.no-functions) .file-row {
     grid-template-columns: 1fr 120px 80px;
   }
 
@@ -1781,7 +1787,13 @@ body.sidebar-resizing .main-content {
   }
 
   .file-list-header,
-  .file-row {
+  .file-row,
+  .no-functions.no-branches .file-list-header,
+  .no-functions.no-branches .file-row,
+  .no-functions:not(.no-branches) .file-list-header,
+  .no-functions:not(.no-branches) .file-row,
+  .no-branches:not(.no-functions) .file-list-header,
+  .no-branches:not(.no-functions) .file-row {
     grid-template-columns: 1fr 100px;
   }
 
